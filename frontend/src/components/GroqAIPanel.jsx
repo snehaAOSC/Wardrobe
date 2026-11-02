@@ -12,10 +12,10 @@ const API_BASE = 'http://localhost:5000/api';
 function Badge({ color = 'purple', children }) {
   const map = {
     purple: { bg: 'rgba(139,92,246,0.15)', text: '#c4b5fd', border: 'rgba(139,92,246,0.3)' },
-    green:  { bg: 'rgba(16,185,129,0.15)',  text: '#6ee7b7', border: 'rgba(16,185,129,0.3)' },
-    blue:   { bg: 'rgba(59,130,246,0.15)',  text: '#93c5fd', border: 'rgba(59,130,246,0.3)' },
-    amber:  { bg: 'rgba(245,158,11,0.15)', text: '#fcd34d', border: 'rgba(245,158,11,0.3)' },
-    pink:   { bg: 'rgba(236,72,153,0.15)', text: '#f9a8d4', border: 'rgba(236,72,153,0.3)' },
+    green: { bg: 'rgba(16,185,129,0.15)', text: '#6ee7b7', border: 'rgba(16,185,129,0.3)' },
+    blue: { bg: 'rgba(59,130,246,0.15)', text: '#93c5fd', border: 'rgba(59,130,246,0.3)' },
+    amber: { bg: 'rgba(245,158,11,0.15)', text: '#fcd34d', border: 'rgba(245,158,11,0.3)' },
+    pink: { bg: 'rgba(236,72,153,0.15)', text: '#f9a8d4', border: 'rgba(236,72,153,0.3)' },
   };
   const c = map[color] || map.purple;
   return (
@@ -353,7 +353,7 @@ export default function GroqAIPanel({
   return (
     <div style={overlay} onClick={onClose}>
       <div style={panel} onClick={(e) => e.stopPropagation()}>
-        
+
         {/* Top Header */}
         <div
           style={{
@@ -759,275 +759,275 @@ export default function GroqAIPanel({
                         </span>
                       </div>
 
-                  {/* Outfit Cards */}
-                  {ragResult.recommendations.map((outfit, idx) => (
-                    <div
-                      key={idx}
-                      style={{
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid rgba(139,92,246,0.25)',
-                        borderRadius: '14px',
-                        padding: '16px',
-                        marginBottom: '14px',
-                        boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
-                      }}
-                    >
-                      {/* Outfit Header */}
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'flex-start',
-                          justifyContent: 'space-between',
-                          marginBottom: '10px'
-                        }}
-                      >
-                        <div>
-                          <span
+                      {/* Outfit Cards */}
+                      {ragResult.recommendations.map((outfit, idx) => (
+                        <div
+                          key={idx}
+                          style={{
+                            background: 'rgba(255,255,255,0.03)',
+                            border: '1px solid rgba(139,92,246,0.25)',
+                            borderRadius: '14px',
+                            padding: '16px',
+                            marginBottom: '14px',
+                            boxShadow: '0 8px 24px rgba(0,0,0,0.3)'
+                          }}
+                        >
+                          {/* Outfit Header */}
+                          <div
                             style={{
-                              fontSize: '15px',
-                              fontWeight: 800,
-                              color: 'white',
-                              display: 'block'
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              justifyContent: 'space-between',
+                              marginBottom: '10px'
                             }}
                           >
-                            {outfit.outfitName}
-                          </span>
-                          <span style={{ fontSize: '11px', color: '#9d84bf' }}>
-                            {outfit.style} • {outfit.occasion}
-                          </span>
-                        </div>
-                        <Badge color="purple">
-                          <Star size={10} className="text-amber-400" />
-                          {Math.round((outfit.confidence || 0.9) * 100)}% Match
-                        </Badge>
-                      </div>
-
-                      {/* Visual Garment Cards with Real Images & One-Click Wear */}
-                      <div
-                        style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '8px',
-                          marginBottom: '12px'
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <span
-                            style={{
-                              fontSize: '10px',
-                              fontWeight: 700,
-                              textTransform: 'uppercase',
-                              letterSpacing: '0.05em',
-                              color: outfit.isEcommerceRecommendation ? '#f472b6' : '#a78bfa'
-                            }}
-                          >
-                            {outfit.isEcommerceRecommendation
-                              ? `🛍️ E-Commerce Recommended Look (${outfit.clothingItems.length} Pieces):`
-                              : `Verified Wardrobe Collection (${outfit.clothingItems.length} Pieces):`}
-                          </span>
-                        </div>
-
-                        {outfit.clothingItems.map((piece) => {
-                          const isCurrentlyWorn = wearingItemId === (piece._id || piece.id);
-                          const imgUrl = piece.imageUrl || piece.image;
-
-                          return (
-                            <div
-                              key={piece._id || piece.id}
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '10px',
-                                background: 'rgba(0,0,0,0.35)',
-                                border: isCurrentlyWorn
-                                  ? '1px solid #10b981'
-                                  : piece.isEcommerce
-                                  ? '1px solid rgba(244,114,182,0.35)'
-                                  : '1px solid rgba(139,92,246,0.2)',
-                                borderRadius: '12px',
-                                padding: '8px 10px',
-                                transition: 'all 0.2s'
-                              }}
-                            >
-                              {/* Visual Garment Image */}
-                              <div
+                            <div>
+                              <span
                                 style={{
-                                  width: '46px',
-                                  height: '46px',
-                                  borderRadius: '8px',
-                                  overflow: 'hidden',
-                                  flexShrink: 0,
-                                  background: piece.primaryColor || '#a855f7',
-                                  border: '1px solid rgba(255,255,255,0.15)',
-                                  boxShadow: '0 2px 6px rgba(0,0,0,0.3)'
+                                  fontSize: '15px',
+                                  fontWeight: 800,
+                                  color: 'white',
+                                  display: 'block'
                                 }}
                               >
-                                {imgUrl ? (
-                                  <img
-                                    src={imgUrl}
-                                    alt={piece.name}
-                                    style={{
-                                      width: '100%',
-                                      height: '100%',
-                                      objectFit: 'cover',
-                                      display: 'block'
-                                    }}
-                                  />
-                                ) : (
+                                {outfit.outfitName}
+                              </span>
+                              <span style={{ fontSize: '11px', color: '#9d84bf' }}>
+                                {outfit.style} • {outfit.occasion}
+                              </span>
+                            </div>
+                            <Badge color="purple">
+                              <Star size={10} className="text-amber-400" />
+                              {Math.round((outfit.confidence || 0.9) * 100)}% Match
+                            </Badge>
+                          </div>
+
+                          {/* Visual Garment Cards with Real Images & One-Click Wear */}
+                          <div
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '8px',
+                              marginBottom: '12px'
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <span
+                                style={{
+                                  fontSize: '10px',
+                                  fontWeight: 700,
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.05em',
+                                  color: outfit.isEcommerceRecommendation ? '#f472b6' : '#a78bfa'
+                                }}
+                              >
+                                {outfit.isEcommerceRecommendation
+                                  ? `🛍️ E-Commerce Recommended Look (${outfit.clothingItems.length} Pieces):`
+                                  : `Verified Wardrobe Collection (${outfit.clothingItems.length} Pieces):`}
+                              </span>
+                            </div>
+
+                            {outfit.clothingItems.map((piece) => {
+                              const isCurrentlyWorn = wearingItemId === (piece._id || piece.id);
+                              const imgUrl = piece.imageUrl || piece.image;
+
+                              return (
+                                <div
+                                  key={piece._id || piece.id}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                    background: 'rgba(0,0,0,0.35)',
+                                    border: isCurrentlyWorn
+                                      ? '1px solid #10b981'
+                                      : piece.isEcommerce
+                                        ? '1px solid rgba(244,114,182,0.35)'
+                                        : '1px solid rgba(139,92,246,0.2)',
+                                    borderRadius: '12px',
+                                    padding: '8px 10px',
+                                    transition: 'all 0.2s'
+                                  }}
+                                >
+                                  {/* Visual Garment Image */}
                                   <div
                                     style={{
-                                      width: '100%',
-                                      height: '100%',
-                                      background: `linear-gradient(135deg, ${piece.primaryColor || '#7c3aed'}, #4c1d95)`
-                                    }}
-                                  />
-                                )}
-                              </div>
-
-                              {/* Garment Details & Origin */}
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                  <span
-                                    style={{
-                                      fontSize: '12.5px',
-                                      fontWeight: 700,
-                                      color: '#f8fafc',
-                                      whiteSpace: 'nowrap',
+                                      width: '46px',
+                                      height: '46px',
+                                      borderRadius: '8px',
                                       overflow: 'hidden',
-                                      textOverflow: 'ellipsis'
+                                      flexShrink: 0,
+                                      background: piece.primaryColor || '#a855f7',
+                                      border: '1px solid rgba(255,255,255,0.15)',
+                                      boxShadow: '0 2px 6px rgba(0,0,0,0.3)'
                                     }}
-                                    title={piece.name}
                                   >
-                                    {piece.name}
-                                  </span>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                                  <span
+                                    {imgUrl ? (
+                                      <img
+                                        src={imgUrl}
+                                        alt={piece.name}
+                                        style={{
+                                          width: '100%',
+                                          height: '100%',
+                                          objectFit: 'cover',
+                                          display: 'block'
+                                        }}
+                                      />
+                                    ) : (
+                                      <div
+                                        style={{
+                                          width: '100%',
+                                          height: '100%',
+                                          background: `linear-gradient(135deg, ${piece.primaryColor || '#7c3aed'}, #4c1d95)`
+                                        }}
+                                      />
+                                    )}
+                                  </div>
+
+                                  {/* Garment Details & Origin */}
+                                  <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      <span
+                                        style={{
+                                          fontSize: '12.5px',
+                                          fontWeight: 700,
+                                          color: '#f8fafc',
+                                          whiteSpace: 'nowrap',
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis'
+                                        }}
+                                        title={piece.name}
+                                      >
+                                        {piece.name}
+                                      </span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                                      <span
+                                        style={{
+                                          fontSize: '9.5px',
+                                          fontWeight: 600,
+                                          padding: '1px 6px',
+                                          borderRadius: '4px',
+                                          background: piece.isEcommerce ? 'rgba(236,72,153,0.2)' : 'rgba(16,185,129,0.2)',
+                                          color: piece.isEcommerce ? '#f9a8d4' : '#6ee7b7'
+                                        }}
+                                      >
+                                        {piece.isEcommerce ? `🛍️ ${piece.store || 'E-Commerce'}` : '✓ In Wardrobe'}
+                                      </span>
+                                      <span style={{ fontSize: '10px', color: '#94a3b8' }}>
+                                        {piece.category}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {/* Individual Wear on Model Button */}
+                                  <button
+                                    onClick={() => handleWearSinglePiece(piece)}
+                                    title="Wear this piece on the 3D Model"
                                     style={{
-                                      fontSize: '9.5px',
-                                      fontWeight: 600,
-                                      padding: '1px 6px',
-                                      borderRadius: '4px',
-                                      background: piece.isEcommerce ? 'rgba(236,72,153,0.2)' : 'rgba(16,185,129,0.2)',
-                                      color: piece.isEcommerce ? '#f9a8d4' : '#6ee7b7'
+                                      padding: '6px 10px',
+                                      borderRadius: '8px',
+                                      background: isCurrentlyWorn
+                                        ? 'linear-gradient(135deg,#10b981,#059669)'
+                                        : 'linear-gradient(135deg,#7c3aed,#ec4899)',
+                                      border: 'none',
+                                      color: 'white',
+                                      fontSize: '10.5px',
+                                      fontWeight: 700,
+                                      cursor: 'pointer',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '4px',
+                                      boxShadow: isCurrentlyWorn ? '0 0 12px rgba(16,185,129,0.5)' : '0 2px 8px rgba(124,58,237,0.3)',
+                                      flexShrink: 0,
+                                      transition: 'all 0.15s'
                                     }}
                                   >
-                                    {piece.isEcommerce ? `🛍️ ${piece.store || 'E-Commerce'}` : '✓ In Wardrobe'}
-                                  </span>
-                                  <span style={{ fontSize: '10px', color: '#94a3b8' }}>
-                                    {piece.category}
-                                  </span>
+                                    {isCurrentlyWorn ? (
+                                      <><CheckCircle size={11} /> Worn</>
+                                    ) : (
+                                      <><Sparkles size={11} /> Wear</>
+                                    )}
+                                  </button>
                                 </div>
-                              </div>
+                              );
+                            })}
+                          </div>
 
-                              {/* Individual Wear on Model Button */}
-                              <button
-                                onClick={() => handleWearSinglePiece(piece)}
-                                title="Wear this piece on the 3D Model"
-                                style={{
-                                  padding: '6px 10px',
-                                  borderRadius: '8px',
-                                  background: isCurrentlyWorn
-                                    ? 'linear-gradient(135deg,#10b981,#059669)'
-                                    : 'linear-gradient(135deg,#7c3aed,#ec4899)',
-                                  border: 'none',
-                                  color: 'white',
-                                  fontSize: '10.5px',
-                                  fontWeight: 700,
-                                  cursor: 'pointer',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: '4px',
-                                  boxShadow: isCurrentlyWorn ? '0 0 12px rgba(16,185,129,0.5)' : '0 2px 8px rgba(124,58,237,0.3)',
-                                  flexShrink: 0,
-                                  transition: 'all 0.15s'
-                                }}
-                              >
-                                {isCurrentlyWorn ? (
-                                  <><CheckCircle size={11} /> Worn</>
-                                ) : (
-                                  <><Sparkles size={11} /> Wear</>
-                                )}
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
+                          {/* Color Harmony Note */}
+                          {outfit.colorHarmony && (
+                            <p
+                              style={{
+                                margin: '0 0 8px',
+                                fontSize: '11px',
+                                color: '#d8b4fe',
+                                background: 'rgba(139,92,246,0.1)',
+                                padding: '6px 10px',
+                                borderRadius: '8px',
+                                borderLeft: '3px solid #a855f7'
+                              }}
+                            >
+                              🎨 <strong>Color Harmony:</strong> {outfit.colorHarmony}
+                            </p>
+                          )}
 
-                      {/* Color Harmony Note */}
-                      {outfit.colorHarmony && (
-                        <p
-                          style={{
-                            margin: '0 0 8px',
-                            fontSize: '11px',
-                            color: '#d8b4fe',
-                            background: 'rgba(139,92,246,0.1)',
-                            padding: '6px 10px',
-                            borderRadius: '8px',
-                            borderLeft: '3px solid #a855f7'
-                          }}
-                        >
-                          🎨 <strong>Color Harmony:</strong> {outfit.colorHarmony}
-                        </p>
-                      )}
+                          {/* Styling Explanation */}
+                          {outfit.explanation && (
+                            <p
+                              style={{
+                                margin: '0 0 10px',
+                                fontSize: '11.5px',
+                                color: '#cbd5e1',
+                                lineHeight: 1.5
+                              }}
+                            >
+                              {outfit.explanation}
+                            </p>
+                          )}
 
-                      {/* Styling Explanation */}
-                      {outfit.explanation && (
-                        <p
-                          style={{
-                            margin: '0 0 10px',
-                            fontSize: '11.5px',
-                            color: '#cbd5e1',
-                            lineHeight: 1.5
-                          }}
-                        >
-                          {outfit.explanation}
-                        </p>
-                      )}
+                          {/* Sustainability Note */}
+                          {outfit.sustainabilityNote && (
+                            <p
+                              style={{
+                                margin: '0 0 12px',
+                                fontSize: '11px',
+                                color: '#6ee7b7',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}
+                            >
+                              <Leaf size={12} />
+                              {outfit.sustainabilityNote}
+                            </p>
+                          )}
 
-                      {/* Sustainability Note */}
-                      {outfit.sustainabilityNote && (
-                        <p
-                          style={{
-                            margin: '0 0 12px',
-                            fontSize: '11px',
-                            color: '#6ee7b7',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                          }}
-                        >
-                          <Leaf size={12} />
-                          {outfit.sustainabilityNote}
-                        </p>
-                      )}
-
-                      {/* One-Click Wear in 3D VR Button */}
-                      <button
-                        onClick={() => handleApplyToVR(outfit)}
-                        style={{
-                          width: '100%',
-                          padding: '10px',
-                          borderRadius: '10px',
-                          background: 'linear-gradient(135deg,#7c3aed,#ec4899)',
-                          border: 'none',
-                          color: 'white',
-                          fontWeight: 700,
-                          fontSize: '12px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '6px',
-                          boxShadow: '0 4px 14px rgba(236,72,153,0.3)',
-                          transition: 'transform 0.2s'
-                        }}
-                      >
-                        <Compass size={14} />
-                        Wear This in 3D VR (Instant Avatar Try-On)
-                      </button>
-                    </div>
-                  ))}
+                          {/* One-Click Wear in 3D VR Button */}
+                          <button
+                            onClick={() => handleApplyToVR(outfit)}
+                            style={{
+                              width: '100%',
+                              padding: '10px',
+                              borderRadius: '10px',
+                              background: 'linear-gradient(135deg,#7c3aed,#ec4899)',
+                              border: 'none',
+                              color: 'white',
+                              fontWeight: 700,
+                              fontSize: '12px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: '6px',
+                              boxShadow: '0 4px 14px rgba(236,72,153,0.3)',
+                              transition: 'transform 0.2s'
+                            }}
+                          >
+                            <Compass size={14} />
+                            Wear This in 3D VR (Instant Avatar Try-On)
+                          </button>
+                        </div>
+                      ))}
                     </>
                   )}
                 </div>

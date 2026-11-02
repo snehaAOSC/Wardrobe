@@ -45,7 +45,7 @@ export const PRODUCTS = [
     silhouette: 'crop-tank',
     position3D: [-2.2, 2.1, -1.8], // 3D coordinates in boutique
     complementaryIds: ['trouser-1', 'shoe-1', 'acc-1', 'out-1'],
-    image: 'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?w=400&auto=format&fit=crop&q=80'
+    image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&auto=format&fit=crop&q=80'
   },
   {
     id: 'top-2',
@@ -73,7 +73,7 @@ export const PRODUCTS = [
     silhouette: 'sweater',
     position3D: [-1.4, 2.1, -1.8],
     complementaryIds: ['trouser-1', 'shoe-3', 'acc-1'],
-    image: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&auto=format&fit=crop&q=80'
+    image: 'https://images.unsplash.com/photo-1576871337622-98d48d1cf531?w=400&auto=format&fit=crop&q=80'
   },
   {
     id: 'top-3',
@@ -128,7 +128,7 @@ export const PRODUCTS = [
     silhouette: 'striped-tee',
     position3D: [0.2, 2.1, -1.8],
     complementaryIds: ['trouser-1', 'shoe-1', 'acc-3'],
-    image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=400&auto=format&fit=crop&q=80'
+    image: 'https://images.unsplash.com/photo-1605763240000-7e93b172d754?w=400&auto=format&fit=crop&q=80'
   },
 
   // --- INDIAN ETHNIC WEAR & SAREES ---
@@ -354,7 +354,7 @@ export const PRODUCTS = [
     silhouette: 'biker',
     position3D: [3.6, 2.3, -1.8],
     complementaryIds: ['dress-1', 'trouser-1', 'shoe-3'],
-    image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&auto=format&fit=crop&q=80'
+    image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&auto=format&fit=crop&q=80'
   },
 
   // --- TROUSERS & BOTTOMS ---
@@ -384,7 +384,7 @@ export const PRODUCTS = [
     silhouette: 'wide-jeans',
     position3D: [-3.2, 1.4, 0.4],
     complementaryIds: ['top-1', 'top-2', 'top-4', 'shoe-1', 'acc-1'],
-    image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&auto=format&fit=crop&q=80'
+    image: 'https://images.unsplash.com/photo-1602293589930-45aad59ba3ab?w=400&auto=format&fit=crop&q=80'
   },
   {
     id: 'trouser-2',

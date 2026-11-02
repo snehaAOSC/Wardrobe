@@ -186,9 +186,37 @@ export function createFabricTexture(type = 'denim', primaryColor = '#5e84a8', ac
   return texture;
 }
 
+// Color name to hex resolution map for MongoDB items
+const COLOR_MAP = {
+  white:    '#f8f9fa',
+  black:    '#1c1c1f',
+  navy:     '#1b2a4a',
+  beige:    '#d8cdbf',
+  camel:    '#bca182',
+  grey:     '#4b5563',
+  gray:     '#4b5563',
+  blue:     '#2563eb',
+  emerald:  '#1b4d3e',
+  green:    '#15803d',
+  red:      '#dc2626',
+  pink:     '#ec4899',
+  purple:   '#7c3aed',
+  brown:    '#5c3a21',
+  yellow:   '#f59e0b',
+  charcoal: '#2d3748'
+};
+
+function normalizeHexColor(c) {
+  if (!c) return '#9e7bb5';
+  if (c.startsWith('#')) return c;
+  const lower = c.toLowerCase().trim();
+  return COLOR_MAP[lower] || c;
+}
+
 // Generate complete PBR material set for a clothing piece
 export function createGarmentPBRMaterial(garmentItem, defaultType = 'ribbed') {
-  const color = garmentItem?.primaryColor || garmentItem?.colors?.[0]?.hex || '#ffffff';
+  const rawColor = garmentItem?.primaryColor || garmentItem?.color || garmentItem?.colors?.[0]?.hex || '#ffffff';
+  const color = normalizeHexColor(rawColor);
   const silhouette = (garmentItem?.silhouette || '').toLowerCase();
   const category = (garmentItem?.category || '').toLowerCase();
   const name = (garmentItem?.name || '').toLowerCase();
@@ -239,21 +267,21 @@ export function createGarmentPBRMaterial(garmentItem, defaultType = 'ribbed') {
     metalness = 0.18;
     clearcoat = 0.55;
     clearcoatRoughness = 0.08;
-  } else if (category === 'trousers' || silhouette.includes('jeans')) {
+  } else if (category === 'trousers' || silhouette.includes('jeans') || name.includes('jean') || name.includes('trouser')) {
     fabricType = 'denim';
     roughness = 0.75;
     metalness = 0.02;
-  } else if (category === 'dresses' || silhouette.includes('slip') || silhouette.includes('satin')) {
+  } else if (category === 'dresses' || category === 'dress' || silhouette.includes('dress') || name.includes('dress') || name.includes('gown')) {
     fabricType = 'satin';
     roughness = 0.25;
     metalness = 0.25;
     clearcoat = 0.4;
-  } else if (category === 'outerwear' || silhouette.includes('biker') || silhouette.includes('leather')) {
+  } else if (category === 'outerwear' || silhouette.includes('biker') || name.includes('jacket') || name.includes('coat')) {
     fabricType = 'leather';
     roughness = 0.4;
     metalness = 0.2;
     clearcoat = 0.5;
-  } else if (category === 'shoes' || silhouette.includes('sneaker') || silhouette.includes('jutti')) {
+  } else if (category === 'shoes' || silhouette.includes('sneaker') || silhouette.includes('jutti') || name.includes('shoe') || name.includes('sneaker') || name.includes('loafer')) {
     if (name.includes('jutti') || name.includes('ethnic') || silhouette.includes('jutti')) {
       fabricType = 'jutti';
       roughness = 0.35;
