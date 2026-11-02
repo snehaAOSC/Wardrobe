@@ -223,6 +223,19 @@ export function createGarmentPBRMaterial(garmentItem, defaultType = 'ribbed') {
       clearcoat = 0.65; // Glossy silk drape
       clearcoatRoughness = 0.08;
     }
+  } else if (
+    category === 'dresses' ||
+    category === 'dress' ||
+    silhouette.includes('slip') ||
+    silhouette.includes('satin') ||
+    silhouette.includes('frock') ||
+    name.includes('frock')
+  ) {
+    fabricType = 'satin';
+    roughness = 0.3;
+    metalness = 0.15;
+    clearcoat = 0.45;
+    clearcoatRoughness = 0.08;
   } else if (category === 'trousers' || silhouette.includes('jeans')) {
     fabricType = 'denim';
     roughness = 0.75;

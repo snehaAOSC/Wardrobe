@@ -242,7 +242,16 @@ export default function App() {
       const next = { ...prev };
       const cat = (product.category || '').toLowerCase();
 
-      if (cat === 'dresses' || cat === 'dress' || cat === 'saree' || cat === 'anarkali' || cat === 'lehenga') {
+      if (
+        cat === 'dresses' ||
+        cat === 'dress' ||
+        cat === 'saree' ||
+        cat === 'anarkali' ||
+        cat === 'lehenga' ||
+        cat === 'frock' ||
+        (product.name && product.name.toLowerCase().includes('frock')) ||
+        (product.silhouette && product.silhouette.toLowerCase().includes('frock'))
+      ) {
         next.dress = product;
         next.top = null;
         next.bottom = null;
@@ -1047,6 +1056,7 @@ export default function App() {
           setIsTryOnEffect(true);
           setTimeout(() => setIsTryOnEffect(false), 1200);
         }}
+        onTryOnItem={handleTryOn}
         mongoClothes={mongoClothes}
       />
 
