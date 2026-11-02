@@ -229,12 +229,15 @@ export function createGarmentPBRMaterial(garmentItem, defaultType = 'ribbed') {
     silhouette.includes('slip') ||
     silhouette.includes('satin') ||
     silhouette.includes('frock') ||
-    name.includes('frock')
+    silhouette.includes('party-top') ||
+    name.includes('frock') ||
+    name.includes('satin') ||
+    name.includes('silk')
   ) {
     fabricType = 'satin';
-    roughness = 0.3;
-    metalness = 0.15;
-    clearcoat = 0.45;
+    roughness = 0.25;
+    metalness = 0.18;
+    clearcoat = 0.55;
     clearcoatRoughness = 0.08;
   } else if (category === 'trousers' || silhouette.includes('jeans')) {
     fabricType = 'denim';

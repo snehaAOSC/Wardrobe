@@ -203,11 +203,32 @@ export default function GroqAIPanel({
       category = 'accessories';
     }
 
+    const COLOR_HEX_MAP = {
+      red: '#dc2626',
+      crimson: '#dc2626',
+      ruby: '#dc2626',
+      burgundy: '#831843',
+      pink: '#f472b6',
+      blue: '#2563eb',
+      navy: '#1e3a8a',
+      black: '#222222',
+      white: '#ffffff',
+      grey: '#888888',
+      gray: '#888888',
+      gold: '#d4af37',
+      yellow: '#eab308',
+      emerald: '#059669',
+      green: '#059669',
+      beige: '#d2b48c'
+    };
     let colorHex = piece.primaryColor || '#ec4899';
-    if (piece.color) {
-      if (typeof piece.color === 'object') colorHex = piece.color.primary || colorHex;
-      else if (String(piece.color).startsWith('#')) colorHex = piece.color;
-      else if (String(piece.color).toLowerCase() === 'pink') colorHex = '#f472b6';
+    const cStr = typeof piece.color === 'string' ? piece.color.toLowerCase().trim() : '';
+    if (piece.color && typeof piece.color === 'object' && piece.color.primary) {
+      colorHex = piece.color.primary;
+    } else if (cStr.startsWith('#')) {
+      colorHex = cStr;
+    } else if (COLOR_HEX_MAP[cStr]) {
+      colorHex = COLOR_HEX_MAP[cStr];
     }
 
     let image = piece.imageUrl || piece.image || null;
@@ -656,31 +677,87 @@ export default function GroqAIPanel({
               )}
 
               {/* RAG Results Display */}
-              {ragResult && ragResult.recommendations && (
+              {ragResult && (
                 <div>
-                  {/* RAG Telemetry Banner */}
-                  <div
-                    style={{
-                      background: 'rgba(16,185,129,0.1)',
-                      border: '1px solid rgba(16,185,129,0.25)',
-                      borderRadius: '10px',
-                      padding: '10px 14px',
-                      marginBottom: '14px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <CheckCircle size={14} style={{ color: '#34d399' }} />
-                      <span style={{ fontSize: '12px', color: '#6ee7b7', fontWeight: 700 }}>
-                        {ragResult.recommendations.length} Outfits Grounded in MongoDB
-                      </span>
+                  {/* CASE 1: Item Not Found / Does Not Exist */}
+                  {(ragResult.notFound || !ragResult.recommendations || ragResult.recommendations.length === 0) ? (
+                    <div
+                      style={{
+                        background: 'rgba(239,68,68,0.12)',
+                        border: '1px solid rgba(239,68,68,0.35)',
+                        borderRadius: '14px',
+                        padding: '18px 16px',
+                        marginBottom: '16px',
+                        textAlign: 'center'
+                      }}
+                    >
+                      <div style={{ fontSize: '24px', marginBottom: '8px' }}>⚠️</div>
+                      <h4 style={{ margin: '0 0 6px', fontSize: '14px', fontWeight: 800, color: '#fca5a5' }}>
+                        Dress / Item Does Not Exist
+                      </h4>
+                      <p style={{ margin: '0 0 10px', fontSize: '12px', color: '#fecaca', lineHeight: 1.5 }}>
+                        {ragResult.message || `The item you searched for does not exist in your MongoDB wardrobe or online partner catalog.`}
+                      </p>
+                      <div
+                        style={{
+                          background: 'rgba(0,0,0,0.25)',
+                          borderRadius: '8px',
+                          padding: '8px 12px',
+                          display: 'inline-block',
+                          fontSize: '11px',
+                          color: '#fda4af'
+                        }}
+                      >
+                        💡 Try searching for: <b>"red top"</b>, <b>"pink frock"</b>, <b>"white shirt"</b>, or pick from the filters above.
+                      </div>
                     </div>
-                    <span style={{ fontSize: '10px', color: '#a7f3d0' }}>
-                      {ragResult.generationSource}
-                    </span>
-                  </div>
+                  ) : (
+                    <>
+                      {/* Telemetry Status Banner */}
+                      <div
+                        style={{
+                          background: ragResult.recommendations[0]?.isEcommerceRecommendation
+                            ? 'rgba(236,72,153,0.15)'
+                            : 'rgba(16,185,129,0.12)',
+                          border: ragResult.recommendations[0]?.isEcommerceRecommendation
+                            ? '1px solid rgba(236,72,153,0.35)'
+                            : '1px solid rgba(16,185,129,0.3)',
+                          borderRadius: '10px',
+                          padding: '10px 14px',
+                          marginBottom: '14px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <CheckCircle
+                            size={14}
+                            style={{
+                              color: ragResult.recommendations[0]?.isEcommerceRecommendation ? '#f472b6' : '#34d399'
+                            }}
+                          />
+                          <span
+                            style={{
+                              fontSize: '12px',
+                              color: ragResult.recommendations[0]?.isEcommerceRecommendation ? '#fbcfe8' : '#6ee7b7',
+                              fontWeight: 700
+                            }}
+                          >
+                            {ragResult.recommendations[0]?.isEcommerceRecommendation
+                              ? `🛍️ E-Commerce Store Match Found (${ragResult.recommendations.length} Look)`
+                              : `✓ ${ragResult.recommendations.length} Outfits Grounded in MongoDB`}
+                          </span>
+                        </div>
+                        <span
+                          style={{
+                            fontSize: '10px',
+                            color: ragResult.recommendations[0]?.isEcommerceRecommendation ? '#f9a8d4' : '#a7f3d0'
+                          }}
+                        >
+                          {ragResult.generationSource}
+                        </span>
+                      </div>
 
                   {/* Outfit Cards */}
                   {ragResult.recommendations.map((outfit, idx) => (
@@ -951,6 +1028,8 @@ export default function GroqAIPanel({
                       </button>
                     </div>
                   ))}
+                    </>
+                  )}
                 </div>
               )}
 
