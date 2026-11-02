@@ -1275,18 +1275,19 @@ export default function App() {
           GROQ RAG AI OUTFIT PANEL
           ========================================================= */}
       <GroqAIPanel
-        isOpen={isGroqOpen || isStylistOpen}
-        onClose={() => {
-          setIsGroqOpen(false);
-          setIsStylistOpen(false);
-        }}
+        isOpen={isStylistOpen}
+        onClose={() => setIsStylistOpen(false)}
         onApplyOutfitToAvatar={(outfit) => {
-          setCurrentOutfit(outfit);
+          if (outfit?.clothingItems && Array.isArray(outfit.clothingItems)) {
+            handleTryFullOutfit(outfit.clothingItems);
+          } else {
+            setCurrentOutfit(outfit);
+          }
           setIsTryOnEffect(true);
           setTimeout(() => setIsTryOnEffect(false), 1200);
         }}
         onTryOnItem={handleTryOn}
-        mongoClothes={mongoClothes || backendWardrobe}
+        mongoClothes={backendWardrobe}
       />
 
       {/* =========================================================
