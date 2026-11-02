@@ -188,21 +188,21 @@ export function createFabricTexture(type = 'denim', primaryColor = '#5e84a8', ac
 
 // Color name to hex resolution map for MongoDB items
 const COLOR_MAP = {
-  white:    '#f8f9fa',
-  black:    '#1c1c1f',
-  navy:     '#1b2a4a',
-  beige:    '#d8cdbf',
-  camel:    '#bca182',
-  grey:     '#4b5563',
-  gray:     '#4b5563',
-  blue:     '#2563eb',
-  emerald:  '#1b4d3e',
-  green:    '#15803d',
-  red:      '#dc2626',
-  pink:     '#ec4899',
-  purple:   '#7c3aed',
-  brown:    '#5c3a21',
-  yellow:   '#f59e0b',
+  white: '#f8f9fa',
+  black: '#1c1c1f',
+  navy: '#1b2a4a',
+  beige: '#d8cdbf',
+  camel: '#bca182',
+  grey: '#4b5563',
+  gray: '#4b5563',
+  blue: '#2563eb',
+  emerald: '#1b4d3e',
+  green: '#15803d',
+  red: '#dc2626',
+  pink: '#ec4899',
+  purple: '#7c3aed',
+  brown: '#5c3a21',
+  yellow: '#f59e0b',
   charcoal: '#2d3748'
 };
 
