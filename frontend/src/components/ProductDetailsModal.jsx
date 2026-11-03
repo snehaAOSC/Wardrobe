@@ -56,9 +56,9 @@ export default function ProductDetailsModal({
           {/* Left Column: Image Preview & Visual Badge */}
           <div className="product-media-column">
             <div className="product-image-container">
-              {product.image ? (
+              {product.image || product.imageUrl ? (
                 <img
-                  src={product.image}
+                  src={product.image || product.imageUrl}
                   alt={product.name}
                   className="product-image"
                   loading="lazy"

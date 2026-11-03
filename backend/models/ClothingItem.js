@@ -10,6 +10,7 @@ export const CLOTHING_CATEGORIES = [
   'Trousers',
   'Jacket',
   'Dress',
+  'Frock',
   'Skirt',
   'Shoes',
   'Accessories',
@@ -95,6 +96,10 @@ const clothingItemSchema = new mongoose.Schema(
       default: null,
       trim: true,
     },
+    tags: {
+      type: [String],
+      default: [],
+    },
     aiAnalyzed: {
       type: Boolean,
       default: false,
@@ -121,6 +126,28 @@ const clothingItemSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    description: {
+      type: String,
+      trim: true,
+      default: '',
+    },
+    text_embedding: {
+      type: [Number],
+      default: [],
+    },
+    image_embedding: {
+      type: [Number],
+      default: [],
+    },
+    source: {
+      type: String,
+      default: 'wardrobe',
+      trim: true,
+    },
+    isEstimated: {
+      type: Boolean,
+      default: false,
+    },
     timesWorn: {
       type: Number,
       default: 0,
@@ -139,6 +166,14 @@ const clothingItemSchema = new mongoose.Schema(
 clothingItemSchema.index({ userId: 1, category: 1 });
 clothingItemSchema.index({ userId: 1, isFavorite: 1 });
 clothingItemSchema.index({ userId: 1, createdAt: -1 });
+clothingItemSchema.index({
+  name: 'text',
+  category: 'text',
+  subCategory: 'text',
+  color: 'text',
+  description: 'text',
+  material: 'text',
+});
 
 const ClothingItem = mongoose.model('ClothingItem', clothingItemSchema);
 

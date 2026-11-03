@@ -42,6 +42,7 @@ import ProductDetailsModal from './components/ProductDetailsModal.jsx';
 import CartDrawer from './components/CartDrawer.jsx';
 import WishlistDrawer from './components/WishlistDrawer.jsx';
 import GroqAIPanel from './components/GroqAIPanel.jsx';
+import UploadClothModal from './components/UploadClothModal.jsx';
 import { PRODUCTS, CATEGORIES, getRecommendations } from './data/products.js';
 import { analyzeClothingImage } from './services/aiService.js';
 import {
@@ -94,7 +95,7 @@ export default function App() {
 
   // --- Catalog, Filtering & Modals ---
   const [activeCategory, setActiveCategory] = useState('all');
-  const [activeOccasion, setActiveOccasion] = useState('Casual');
+  const [activeOccasion, setActiveOccasion] = useState('All');
   const [selectedProduct, setSelectedProduct] = useState(null);
 
   // --- Cart & Wishlist State ---
@@ -120,23 +121,26 @@ export default function App() {
   // --- Upload Cloth Feature ---
   const [uploadedClothes, setUploadedClothes] = useState([]);
   const [isUploadingCloth, setIsUploadingCloth] = useState(false);
-  const [uploadStatus, setUploadStatus]       = useState('');
-  const [toastMessage, setToastMessage]       = useState('');
+  const [uploadStatus, setUploadStatus] = useState('');
+  const [toastMessage, setToastMessage] = useState('');
+  const [pendingUploadFile, setPendingUploadFile] = useState(null);
+  const [pendingPreviewUrl, setPendingPreviewUrl] = useState(null);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const fileInputRef = useRef(null);
 
   // --- Wardrobe View Mode: 'wardrobe' (MongoDB) vs 'catalog' (Boutique) ---
-  const [panelTab, setPanelTab]               = useState('wardrobe');
+  const [panelTab, setPanelTab] = useState('wardrobe');
 
   // --- Backend Auth & Wardrobe State ---
-  const [authToken, setAuthToken]             = useState(() => getAuthToken());
-  const [currentUser, setCurrentUser]         = useState(() => getSavedUser());
+  const [authToken, setAuthToken] = useState(() => getAuthToken());
+  const [currentUser, setCurrentUser] = useState(() => getSavedUser());
   const [backendWardrobe, setBackendWardrobe] = useState([]);
   const [isLoadingWardrobe, setIsLoadingWardrobe] = useState(false);
-  const [showLoginModal, setShowLoginModal]   = useState(false);
-  const [loginEmail, setLoginEmail]           = useState('');
-  const [loginPassword, setLoginPassword]     = useState('');
-  const [loginError, setLoginError]           = useState('');
-  const [isLoggingIn, setIsLoggingIn]         = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Helper to trigger toast notification
   const showToast = useCallback((msg) => {
@@ -501,7 +505,7 @@ export default function App() {
     if (navigator.xr && navigator.xr.isSessionSupported) {
       navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
         if (supported) {
-          navigator.xr.requestSession('immersive-vr').catch(() => {});
+          navigator.xr.requestSession('immersive-vr').catch(() => { });
         } else {
           toggleFullscreen();
         }
@@ -513,10 +517,10 @@ export default function App() {
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
+      document.documentElement.requestFullscreen().catch(() => { });
       setIsVRActive(true);
     } else {
-      document.exitFullscreen().catch(() => {});
+      document.exitFullscreen().catch(() => { });
       setIsVRActive(false);
     }
   };
@@ -538,144 +542,86 @@ export default function App() {
     setDpadInput({ x: 0, y: 0 });
   };
 
-  // --- Upload Cloth Image Handler: Stores in MongoDB & tries on 3D Avatar ---
-  const handleClothUpload = async (e) => {
+  // --- Upload Cloth: Opens confirmation modal to ask user for real details ---
+  const handleClothUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setIsUploadingCloth(true);
-    setUploadStatus('Analyzing Garment with AI…');
-    const localImageUrl = URL.createObjectURL(file);
-
-    let detectedCategory = activeCategory !== 'all' ? activeCategory : 'tops';
-    let detectedName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
-    detectedName = detectedName.replace(/\b\w/g, (c) => c.toUpperCase());
-    let detectedColor = '#d946ef';
-    let detectedTags = ['custom', 'uploaded', 'wardrobe'];
-
-    // 1. Vision AI classification
-    try {
-      const aiResult = await analyzeClothingImage(file);
-      if (aiResult) {
-        const catGroup = (aiResult.category_group || '').toLowerCase();
-        const catName = (aiResult.category || aiResult.classification || '').toLowerCase();
-
-        if (catGroup === 'top' || catName.includes('shirt') || catName.includes('top') || catName.includes('sweater')) {
-          detectedCategory = 'tops';
-        } else if (catGroup === 'bottom' || catName.includes('jean') || catName.includes('pant') || catName.includes('trouser') || catName.includes('skirt')) {
-          detectedCategory = 'trousers';
-        } else if (catGroup === 'dress' || catName.includes('dress')) {
-          detectedCategory = 'dresses';
-        } else if (catGroup === 'outerwear' || catName.includes('jacket') || catName.includes('coat') || catName.includes('blazer')) {
-          detectedCategory = 'outerwear';
-        } else if (catGroup === 'footwear' || catName.includes('shoe') || catName.includes('sneaker') || catName.includes('heel') || catName.includes('boot')) {
-          detectedCategory = 'shoes';
-        } else if (catGroup === 'accessory' || catName.includes('bag') || catName.includes('belt') || catName.includes('accessory')) {
-          detectedCategory = 'accessories';
-        }
-
-        if (aiResult.colour?.dominant_hex) {
-          detectedColor = aiResult.colour.dominant_hex;
-        } else if (aiResult.color_dominant?.hex) {
-          detectedColor = aiResult.color_dominant.hex;
-        }
-
-        if (aiResult.category) {
-          detectedName = `${aiResult.colour?.dominant || ''} ${aiResult.category}`.trim();
-        }
-      }
-    } catch (err) {
-      console.info('Client fallback for cloth AI vision:', err.message);
-    }
-
-    // 2. Prepare local item for zero-latency 3D try-on
-    let readyItem = {
-      id: `custom-${Date.now()}`,
-      name: detectedName || 'Custom Uploaded Piece',
-      category: detectedCategory,
-      price: 110,
-      discountPrice: null,
-      rating: 5.0,
-      reviewsCount: 1,
-      description: 'Your custom clothing item stored in MongoDB Atlas.',
-      details: ['MongoDB Stored Item', 'Personal Virtual Try-On Asset', 'High-Res Preview'],
-      sizes: ['XS', 'S', 'M', 'L'],
-      colors: [{ name: 'Custom Hue', hex: detectedColor }],
-      primaryColor: detectedColor,
-      brand: 'My Closet',
-      inStock: true,
-      stockCount: 1,
-      featured: true,
-      tags: detectedTags,
-      garmentType: detectedCategory === 'dresses' ? 'dress' : detectedCategory === 'trousers' ? 'bottom' : detectedCategory === 'shoes' ? 'shoes' : 'top',
-      silhouette: detectedCategory === 'dresses' ? 'slip-dress' : 'custom',
-      position3D: [0, 2.0, -1.8],
-      complementaryIds: [],
-      image: localImageUrl
-    };
-
-    // Immediate 3D dressing
-    handleTryOn(readyItem);
-    setSelectedProduct(readyItem);
-    setUploadedClothes((prev) => [readyItem, ...prev]);
-
-    // 3. Store garment metadata and upload file to MongoDB backend
-    setUploadStatus('Saving to MongoDB Atlas…');
-    try {
-      const token = authToken || (await ensureAuth());
-      if (token) {
-        if (!authToken) {
-          setAuthToken(token);
-          setCurrentUser(getSavedUser());
-        }
-
-        // POST /api/clothes -> creates MongoDB document
-        const savedBackendItem = await addClothingItem(token, {
-          name:        readyItem.name,
-          category:    detectedCategory,
-          color:       detectedColor,
-          brand:       'My Closet',
-          description: readyItem.description,
-          size:        'M',
-          tags:        detectedTags
-        });
-
-        if (savedBackendItem?.backendId) {
-          readyItem.backendId = savedBackendItem.backendId;
-          readyItem.id = `backend_${savedBackendItem.backendId}`;
-
-          // POST /api/clothes/:id/image -> uploads actual image file
-          setUploadStatus('Uploading Image File to Database…');
-          const imageResult = await uploadClothingImage(token, savedBackendItem.backendId, file);
-          if (imageResult?.image) {
-            readyItem.image = imageResult.image;
-          }
-        }
-
-        // Fetch fresh list from MongoDB to ensure absolute parity
-        const freshList = await getWardrobe(token);
-        if (freshList && freshList.length > 0) {
-          setBackendWardrobe(freshList);
-        }
-
-        showToast(`"${readyItem.name}" saved to MongoDB & added to your Wardrobe!`);
-      }
-    } catch (saveErr) {
-      console.warn('MongoDB save error:', saveErr.message);
-      showToast(`Uploaded locally (${saveErr.message})`);
-    } finally {
-      setIsUploadingCloth(false);
-      setUploadStatus('');
-      setPanelTab('wardrobe'); // Automatically open and display in Wardrobe view!
-    }
+    setPendingUploadFile(file);
+    setPendingPreviewUrl(URL.createObjectURL(file));
+    setIsUploadModalOpen(true);
 
     if (e.target) e.target.value = '';
   };
 
+  // --- Save Uploaded Cloth to MongoDB Atlas with Exact User-Entered Details ---
+  const handleSaveUploadedCloth = async (details) => {
+    setIsUploadingCloth(true);
+    setUploadStatus('Saving to MongoDB Atlas…');
+
+    try {
+      const token = authToken || (await ensureAuth());
+      if (token && !authToken) {
+        setAuthToken(token);
+        setCurrentUser(getSavedUser());
+      }
+
+      // 1. Save document to MongoDB with user-provided details
+      const savedBackendItem = await addClothingItem(token, {
+        name: details.name,
+        category: details.category,
+        subCategory: details.subCategory,
+        color: details.color,
+        primaryColor: details.primaryColor,
+        pattern: details.pattern,
+        material: details.material,
+        occasion: details.occasion,
+        season: details.season,
+        style: details.style,
+        description: details.description,
+        tags: details.tags,
+        size: 'M',
+        price: 110
+      });
+
+      // 2. Upload actual image file to /api/clothes/:id/image
+      if (savedBackendItem?.backendId && pendingUploadFile) {
+        setUploadStatus('Uploading Image File to Database…');
+        const imageResult = await uploadClothingImage(token, savedBackendItem.backendId, pendingUploadFile);
+        if (imageResult?.image) {
+          savedBackendItem.image = imageResult.image;
+        }
+      }
+
+      // 3. Immediately refresh fresh wardrobe from MongoDB Atlas
+      const freshList = await getWardrobe(token);
+      if (freshList && freshList.length > 0) {
+        setBackendWardrobe(freshList);
+      } else {
+        setBackendWardrobe((prev) => [savedBackendItem, ...prev]);
+      }
+
+      // 4. Zero-latency 3D avatar dressing
+      handleTryOn(savedBackendItem);
+      setSelectedProduct(savedBackendItem);
+      setPanelTab('wardrobe');
+      showToast(`"${details.name}" saved to MongoDB & added to your Wardrobe!`);
+
+      // 5. Close modal & clear pending file
+      setIsUploadModalOpen(false);
+      setPendingUploadFile(null);
+      setPendingPreviewUrl(null);
+    } catch (saveErr) {
+      console.warn('MongoDB save error:', saveErr.message);
+      showToast(`Upload failed: ${saveErr.message}`);
+    } finally {
+      setIsUploadingCloth(false);
+      setUploadStatus('');
+    }
+  };
+
   // Filtered Products for Right Wardrobe Sidebar
   const displayedItems = useMemo(() => {
-    // If in 'wardrobe' tab: show ONLY clothes stored in MongoDB (+ any active uploaded clothes)
-    // If in 'catalog' tab: show boutique catalog products (PRODUCTS)
     let sourceList = panelTab === 'wardrobe'
       ? [...uploadedClothes.filter(u => !backendWardrobe.some(b => b.backendId === u.backendId)), ...backendWardrobe]
       : PRODUCTS;
@@ -684,18 +630,58 @@ export default function App() {
       const cat = activeCategory.toLowerCase();
       sourceList = sourceList.filter((p) => {
         const itemCat = (p.category || '').toLowerCase();
-        if (cat === 'tops') return itemCat === 'tops' || itemCat === 'top' || itemCat === 'shirt' || itemCat === 't-shirt';
-        if (cat === 'trousers') return itemCat === 'trousers' || itemCat === 'skirts' || itemCat === 'skirt' || itemCat === 'bottom' || itemCat === 'bottoms' || itemCat === 'jeans';
-        if (cat === 'dresses') return itemCat === 'dresses' || itemCat === 'dress';
-        if (cat === 'outerwear') return itemCat === 'outerwear' || itemCat === 'jacket' || itemCat === 'coat' || itemCat === 'coats';
-        if (cat === 'shoes') return itemCat === 'shoes' || itemCat === 'footwear';
-        if (cat === 'accessories') return itemCat === 'accessories' || itemCat === 'accessory' || itemCat === 'bags' || itemCat === 'bag';
+        const rawCat = (p.rawCategory || '').toLowerCase();
+        const subCat = (p.subCategory || '').toLowerCase();
+        const name = (p.name || '').toLowerCase();
+
+        if (cat === 'tops') {
+          return itemCat === 'tops' ||
+            ['shirt', 't-shirt', 'top', 'blouse', 'sweater', 'hoodie', 'camisole', 'tee'].includes(rawCat) ||
+            ['shirt', 't-shirt', 'top', 'blouse', 'sweater', 'hoodie', 'camisole', 'tee'].some(k => subCat.includes(k)) ||
+            name.includes('shirt') || name.includes('top') || name.includes('tee') || name.includes('sweater') || name.includes('blouse');
+        }
+        if (cat === 'trousers') {
+          return itemCat === 'trousers' ||
+            ['jeans', 'trousers', 'trouser', 'pants', 'pant', 'skirt', 'skirts', 'bottom', 'bottoms', 'slacks', 'shorts', 'denim'].includes(rawCat) ||
+            ['jeans', 'trousers', 'pants', 'skirt', 'midi', 'slim', 'straight'].some(k => subCat.includes(k)) ||
+            name.includes('jean') || name.includes('trouser') || name.includes('pant') || name.includes('skirt');
+        }
+        if (cat === 'dresses') {
+          return itemCat === 'dresses' ||
+            ['dress', 'dresses', 'frock', 'saree', 'sari', 'anarkali', 'lehenga', 'kurti', 'gown', 'suit', 'ethnic', 'traditional'].includes(rawCat) ||
+            ['dress', 'frock', 'saree', 'anarkali', 'lehenga', 'kurti', 'gown'].some(k => subCat.includes(k)) ||
+            name.includes('dress') || name.includes('frock') || name.includes('saree') || name.includes('anarkali') || name.includes('kurti') || name.includes('lehenga') || name.includes('suit');
+        }
+        if (cat === 'outerwear') {
+          return itemCat === 'outerwear' ||
+            ['jacket', 'coat', 'coats', 'blazer', 'cardigan', 'overcoat', 'outerwear'].includes(rawCat) ||
+            ['jacket', 'coat', 'blazer', 'cardigan', 'overcoat'].some(k => subCat.includes(k)) ||
+            name.includes('jacket') || name.includes('coat') || name.includes('blazer');
+        }
+        if (cat === 'shoes') {
+          return itemCat === 'shoes' ||
+            ['shoes', 'shoe', 'sneakers', 'sneaker', 'boots', 'boot', 'heels', 'heel', 'loafers', 'loafer', 'jutti', 'juttis', 'footwear'].includes(rawCat) ||
+            ['shoes', 'sneaker', 'boot', 'heel', 'loafer', 'jutti'].some(k => subCat.includes(k)) ||
+            name.includes('shoe') || name.includes('sneaker') || name.includes('loafer') || name.includes('jutti') || name.includes('boot');
+        }
+        if (cat === 'accessories') {
+          return itemCat === 'accessories' ||
+            ['accessories', 'accessory', 'bag', 'bags', 'belt', 'jewelry', 'handbag', 'wallet', 'scarf'].includes(rawCat) ||
+            ['bag', 'belt', 'jewelry', 'accessory'].some(k => subCat.includes(k)) ||
+            name.includes('bag') || name.includes('belt') || name.includes('accessory');
+        }
         return itemCat === cat;
       });
     }
+
     if (activeOccasion && activeOccasion !== 'All') {
       const occLower = activeOccasion.toLowerCase();
-      const matched = sourceList.filter((p) => p.tags?.some((t) => t.toLowerCase().includes(occLower)));
+      const matched = sourceList.filter((p) => {
+        const occList = Array.isArray(p.occasion) ? p.occasion : [];
+        const tagList = Array.isArray(p.tags) ? p.tags : [];
+        return occList.some((o) => o.toLowerCase().includes(occLower)) ||
+          tagList.some((t) => t.toLowerCase().includes(occLower));
+      });
       if (matched.length > 0) sourceList = matched;
     }
     return sourceList;
@@ -792,7 +778,7 @@ export default function App() {
 
         {/* Right Controls */}
         <div className="topbar-actions">
-<button
+          <button
             onClick={toggleCameraMode}
             className={`topbar-pill-btn${cameraMode === 'follow' ? ' active' : ''}`}
             title="Toggle camera mode"
@@ -887,7 +873,7 @@ export default function App() {
           <Shirt size={18} />
           <span>Wardrobe</span>
         </button>
-<button
+        <button
           className="dock-btn"
           title="AI Stylist"
           onClick={() => setIsStylistOpen(true)}
@@ -962,7 +948,7 @@ export default function App() {
           BOTTOM CENTER CONTROLS BAR
           ========================================================= */}
       <div className="bottom-bar">
-<button
+        <button
           onClick={toggleAutoRotate}
           className={`bar-btn${autoRotate ? ' active' : ''}`}
         >
@@ -1044,13 +1030,13 @@ export default function App() {
           <h2 className="panel-heading">Clothing Categories</h2>
           <div className="cat-grid">
             {[
-              { key: 'all',         label: 'All',      Icon: Grid },
-              { key: 'tops',        label: 'Tops',     Icon: Shirt },
-              { key: 'trousers',    label: 'Bottoms',  Icon: Scissors },
-              { key: 'dresses',     label: 'Dresses',  Icon: Sparkles },
-              { key: 'outerwear',   label: 'Coats',    Icon: Layers },
-              { key: 'shoes',       label: 'Shoes',    Icon: Footprints },
-              { key: 'accessories', label: 'Bags',     Icon: ShoppingBag },
+              { key: 'all', label: 'All', Icon: Grid },
+              { key: 'tops', label: 'Tops', Icon: Shirt },
+              { key: 'trousers', label: 'Bottoms', Icon: Scissors },
+              { key: 'dresses', label: 'Dresses', Icon: Sparkles },
+              { key: 'outerwear', label: 'Coats', Icon: Layers },
+              { key: 'shoes', label: 'Shoes', Icon: Footprints },
+              { key: 'accessories', label: 'Accessories', Icon: ShoppingBag },
             ].map(({ key, label, Icon }) => (
               <button
                 key={key}
@@ -1187,12 +1173,12 @@ export default function App() {
           <h2 className="panel-heading">Occasion</h2>
           <div className="occasion-grid">
             {[
-              { key: 'Casual',  label: 'Casual',   Icon: Sun },
-              { key: 'College', label: 'College',  Icon: GraduationCap },
-              { key: 'Party',   label: 'Party',    Icon: Wine },
-              { key: 'Office',  label: 'Office',   Icon: Briefcase },
-              { key: 'Date',    label: 'Date',     Icon: Heart },
-              { key: 'All',     label: 'All',      Icon: Sparkle }
+              { key: 'Casual', label: 'Casual', Icon: Sun },
+              { key: 'College', label: 'College', Icon: GraduationCap },
+              { key: 'Party', label: 'Party', Icon: Wine },
+              { key: 'Office', label: 'Office', Icon: Briefcase },
+              { key: 'Date', label: 'Date', Icon: Heart },
+              { key: 'All', label: 'All', Icon: Sparkle }
             ].map(({ key, label, Icon }) => (
               <button
                 key={key}
@@ -1288,6 +1274,23 @@ export default function App() {
         }}
         onTryOnItem={handleTryOn}
         mongoClothes={backendWardrobe}
+      />
+
+      {/* =========================================================
+          UPLOAD CLOTH DETAILS CONFIRMATION MODAL
+          ========================================================= */}
+      <UploadClothModal
+        isOpen={isUploadModalOpen}
+        onClose={() => {
+          setIsUploadModalOpen(false);
+          setPendingUploadFile(null);
+          setPendingPreviewUrl(null);
+        }}
+        file={pendingUploadFile}
+        previewUrl={pendingPreviewUrl}
+        onSave={handleSaveUploadedCloth}
+        isSubmitting={isUploadingCloth}
+        statusMessage={uploadStatus}
       />
 
       {/* =========================================================

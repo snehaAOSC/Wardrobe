@@ -124,6 +124,7 @@ export default function WardrobeManager({ isOpen, onClose, onItemAdded, onTryOn 
       material: item.material || 'Silk & Cotton Blend',
       silhouette: rawCat,
       image,
+      imageUrl: image,
       isMongo: true,
       inStock: true
     };

@@ -61,25 +61,23 @@ const upload = multer({
 });
 
 /**
- * Middleware wrapper for single image upload field named 'image'
+ * Middleware wrapper for clothing image upload.
+ * Accepts either 'image' or 'file' form field seamlessly.
  * Catches Multer errors and returns clear, consistent JSON error responses
  */
 export const uploadClothingImageMiddleware = (req, res, next) => {
-  const singleUpload = upload.single('image');
+  const multiUpload = upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'file', maxCount: 1 },
+  ]);
 
-  singleUpload(req, res, (err) => {
+  multiUpload(req, res, (err) => {
     if (err) {
       if (err instanceof multer.MulterError) {
         if (err.code === 'LIMIT_FILE_SIZE') {
           return res.status(400).json({
             success: false,
             message: 'Image exceeds the maximum allowed size of 5 MB.',
-          });
-        }
-        if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-          return res.status(400).json({
-            success: false,
-            message: "Unexpected upload field. File field name must be 'image'.",
           });
         }
         return res.status(400).json({
@@ -99,6 +97,10 @@ export const uploadClothingImageMiddleware = (req, res, next) => {
         success: false,
         message: 'Failed to process file upload.',
       });
+    }
+
+    if (req.files) {
+      req.file = req.files['image']?.[0] || req.files['file']?.[0] || null;
     }
 
     next();

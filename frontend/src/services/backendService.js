@@ -18,8 +18,8 @@
 const BACKEND_URL = 'http://localhost:5000';
 
 // ─── Storage keys ──────────────────────────────────────────────────────────────
-const TOKEN_KEY  = 'wardrobewise_token';
-const USER_KEY   = 'wardrobewise_user';
+const TOKEN_KEY = 'wardrobewise_token';
+const USER_KEY = 'wardrobewise_user';
 
 // ─── Token helpers ─────────────────────────────────────────────────────────────
 export function saveAuthToken(token) {
@@ -87,7 +87,7 @@ export async function loginUser(email, password) {
   });
   const data = await res.json();
   const token = data.data?.token || data.token;
-  const user  = data.data?.user  || data.user;
+  const user = data.data?.user || data.user;
   if (!res.ok || !token) {
     throw new Error(data.message || 'Login failed. Check your email and password.');
   }
@@ -107,7 +107,7 @@ export async function registerUser(name, email, password) {
   });
   const data = await res.json();
   const token = data.data?.token || data.token;
-  const user  = data.data?.user  || data.user;
+  const user = data.data?.user || data.user;
   if (!res.ok || !token) {
     throw new Error(data.message || 'Registration failed. Please try again.');
   }
@@ -125,21 +125,21 @@ export function logoutUser() {
 
 // ─── Color Name to Hex Mapping ────────────────────────────────────────────────
 const COLOR_NAME_MAP = {
-  white:    '#f8f9fa',
-  black:    '#1c1c1f',
-  navy:     '#1b2a4a',
-  beige:    '#d8cdbf',
-  camel:    '#bca182',
-  grey:     '#4b5563',
-  gray:     '#4b5563',
-  blue:     '#2563eb',
-  emerald:  '#1b4d3e',
-  green:    '#15803d',
-  red:      '#dc2626',
-  pink:     '#ec4899',
-  purple:   '#7c3aed',
-  brown:    '#5c3a21',
-  yellow:   '#f59e0b',
+  white: '#f8f9fa',
+  black: '#1c1c1f',
+  navy: '#1b2a4a',
+  beige: '#d8cdbf',
+  camel: '#bca182',
+  grey: '#4b5563',
+  gray: '#4b5563',
+  blue: '#2563eb',
+  emerald: '#1b4d3e',
+  green: '#15803d',
+  red: '#dc2626',
+  pink: '#ec4899',
+  purple: '#7c3aed',
+  brown: '#5c3a21',
+  yellow: '#f59e0b',
   charcoal: '#2d3748'
 };
 
@@ -152,25 +152,28 @@ function resolveHexColor(c) {
 
 // ─── Category mapping: backend → frontend ─────────────────────────────────────
 export function mapBackendCategory(backendCat) {
-  const map = {
-    'Shirt':       'tops',
-    'T-Shirt':     'tops',
-    'Jeans':       'trousers',
-    'Trousers':    'trousers',
-    'Jacket':      'outerwear',
-    'Coat':        'outerwear',
-    'Dress':       'dresses',
-    'Skirt':       'trousers',
-    'Shoes':       'shoes',
-    'Sneakers':    'shoes',
-    'Heels':       'shoes',
-    'Boots':       'shoes',
-    'Accessories': 'accessories',
-    'Bag':         'accessories',
-    'Jewelry':     'accessories',
-    'Other':       'tops'
-  };
-  return map[backendCat] || 'tops';
+  if (!backendCat) return 'tops';
+  const lower = String(backendCat).toLowerCase().trim();
+
+  if (['shirt', 't-shirt', 'top', 'blouse', 'sweater', 'hoodie', 'camisole', 'tee', 'tank', 'tops'].includes(lower)) {
+    return 'tops';
+  }
+  if (['jeans', 'trousers', 'trouser', 'pant', 'pants', 'skirt', 'skirts', 'bottom', 'bottoms', 'slacks', 'shorts', 'denim'].includes(lower)) {
+    return 'trousers';
+  }
+  if (['dress', 'dresses', 'frock', 'saree', 'sari', 'anarkali', 'lehenga', 'kurti', 'kurta', 'gown', 'ethnic', 'traditional', 'suit'].includes(lower)) {
+    return 'dresses';
+  }
+  if (['jacket', 'coat', 'coats', 'blazer', 'cardigan', 'overcoat', 'outerwear'].includes(lower)) {
+    return 'outerwear';
+  }
+  if (['shoes', 'shoe', 'sneakers', 'sneaker', 'boots', 'boot', 'heels', 'heel', 'loafers', 'loafer', 'jutti', 'juttis', 'footwear', 'sandals'].includes(lower)) {
+    return 'shoes';
+  }
+  if (['accessories', 'accessory', 'bag', 'bags', 'belt', 'jewelry', 'handbag', 'wallet', 'scarf'].includes(lower)) {
+    return 'accessories';
+  }
+  return 'tops';
 }
 
 /**
@@ -178,44 +181,67 @@ export function mapBackendCategory(backendCat) {
  */
 function backendItemToProduct(item) {
   const category = mapBackendCategory(item.category);
-  const color    = resolveHexColor(item.color);
+  const color = resolveHexColor(item.color);
 
   const garmentTypeMap = {
-    tops:        'top',
-    dresses:     'dress',
-    outerwear:   'outerwear',
-    trousers:    'bottom',
-    shoes:       'shoes',
+    tops: 'top',
+    dresses: 'dress',
+    outerwear: 'outerwear',
+    trousers: 'bottom',
+    shoes: 'shoes',
     accessories: 'accessory'
   };
 
+  const occasions = Array.isArray(item.occasion) ? item.occasion : (item.occasion ? [item.occasion] : []);
+  const seasons = Array.isArray(item.season) ? item.season : (item.season ? [item.season] : []);
+  const styles = Array.isArray(item.style) ? item.style : (item.style ? [item.style] : []);
+
+  const allTags = [
+    ...(item.tags || []),
+    ...occasions,
+    ...seasons,
+    ...styles,
+    item.category,
+    item.subCategory,
+    item.color,
+    item.pattern,
+    item.material
+  ].filter(Boolean).map(t => String(t).toLowerCase());
+
   return {
-    id:            `backend_${item._id}`,
-    backendId:     item._id,
-    name:          item.name || 'My Clothing',
+    id: `backend_${item._id}`,
+    backendId: item._id,
+    name: item.name || 'My Clothing',
     category,
-    price:         item.price || 100,
+    rawCategory: item.category,
+    subCategory: item.subCategory || '',
+    occasion: occasions,
+    season: seasons,
+    style: styles,
+    pattern: item.pattern || 'Plain',
+    material: item.material || '',
+    price: item.price || 110,
     discountPrice: null,
-    rating:        4.5,
-    reviewsCount:  0,
-    description:   item.description || 'Your wardrobe item.',
-    details:       ['Personal Wardrobe Item', 'Virtual Try-On Ready'],
-    sizes:         item.size ? [item.size] : ['S', 'M', 'L'],
-    colors:        [{ name: item.color || 'Custom', hex: color }],
-    primaryColor:  color,
-    brand:         item.brand || 'My Wardrobe',
-    inStock:       true,
-    stockCount:    1,
-    featured:      false,
-    tags:          item.tags || [],
-    garmentType:   garmentTypeMap[category] || 'top',
-    silhouette:    'custom',
-    position3D:    [0, 2.0, -1.8],
+    rating: item.rating || 4.9,
+    reviewsCount: item.reviewsCount || 0,
+    description: item.description || 'Personal wardrobe item.',
+    details: ['Personal Wardrobe Item', 'Virtual Try-On Ready', item.material].filter(Boolean),
+    sizes: item.size ? [item.size] : ['S', 'M', 'L'],
+    colors: [{ name: item.color || 'Custom', hex: color }],
+    primaryColor: color,
+    brand: item.brand || 'My Wardrobe',
+    inStock: true,
+    stockCount: 1,
+    featured: Boolean(item.isFavorite || item.favorite),
+    tags: allTags,
+    garmentType: garmentTypeMap[category] || 'top',
+    silhouette: (item.subCategory || category || 'custom').toLowerCase(),
+    position3D: [0, 2.0, -1.8],
     complementaryIds: [],
-    image:         item.imageUrl
+    image: item.imageUrl
       ? (item.imageUrl.startsWith('http')
-          ? item.imageUrl
-          : `${BACKEND_URL}${item.imageUrl}`)
+        ? item.imageUrl
+        : `${BACKEND_URL}${item.imageUrl}`)
       : null
   };
 }
@@ -232,7 +258,7 @@ export async function getWardrobe(token) {
     let res = await fetch(`${BACKEND_URL}/api/clothes?limit=100`, {
       headers: {
         'Authorization': `Bearer ${authToken}`,
-        'Content-Type':  'application/json'
+        'Content-Type': 'application/json'
       },
       signal: AbortSignal.timeout(6000)
     });
@@ -245,7 +271,7 @@ export async function getWardrobe(token) {
       res = await fetch(`${BACKEND_URL}/api/clothes?limit=100`, {
         headers: {
           'Authorization': `Bearer ${authToken}`,
-          'Content-Type':  'application/json'
+          'Content-Type': 'application/json'
         },
         signal: AbortSignal.timeout(6000)
       });
@@ -262,38 +288,74 @@ export async function getWardrobe(token) {
 }
 
 /**
- * Add a new clothing item to the backend wardrobe.
- * Returns the created item's ID and the mapped frontend product.
+ * Add a new clothing item to the backend wardrobe with authentic user-specified metadata.
+ * Returns the mapped frontend product.
  */
-export async function addClothingItem(token, { name, category, color, brand, description, size, tags }) {
+export async function addClothingItem(token, itemPayload) {
   let authToken = token || (await ensureAuth());
   if (!authToken) throw new Error('Not logged in and could not auto-authenticate');
 
-  // Map frontend category to backend category
-  const backendCatMap = {
-    tops:        'Shirt',
-    dresses:     'Dress',
-    outerwear:   'Jacket',
-    trousers:    'Jeans',
-    shoes:       'Shoes',
-    accessories: 'Accessories'
-  };
+  const {
+    name,
+    category,
+    subCategory,
+    color,
+    secondaryColors,
+    pattern,
+    material,
+    brand,
+    season,
+    occasion,
+    style,
+    description,
+    size,
+    tags,
+    price
+  } = itemPayload;
+
+  // Resolve valid backend category
+  const rawCat = String(category || 'Shirt').trim();
+  const lowerCat = rawCat.toLowerCase();
+  let resolvedCategory = 'Shirt';
+
+  if (lowerCat === 'dress' || lowerCat === 'dresses') resolvedCategory = 'Dress';
+  else if (lowerCat === 'frock') resolvedCategory = 'Frock';
+  else if (lowerCat === 'saree' || lowerCat === 'sari') resolvedCategory = 'Saree';
+  else if (lowerCat === 'anarkali') resolvedCategory = 'Anarkali';
+  else if (lowerCat === 'kurti' || lowerCat === 'kurta') resolvedCategory = 'Kurti';
+  else if (lowerCat === 'lehenga') resolvedCategory = 'Lehenga';
+  else if (lowerCat === 'suit') resolvedCategory = 'Suit';
+  else if (lowerCat === 'jeans' || lowerCat === 'denim') resolvedCategory = 'Jeans';
+  else if (lowerCat === 'trousers' || lowerCat === 'trouser' || lowerCat === 'pants' || lowerCat === 'slacks') resolvedCategory = 'Trousers';
+  else if (lowerCat === 'skirt' || lowerCat === 'skirts') resolvedCategory = 'Skirt';
+  else if (lowerCat === 'jacket' || lowerCat === 'coat' || lowerCat === 'blazer' || lowerCat === 'outerwear') resolvedCategory = 'Jacket';
+  else if (lowerCat === 'shoes' || lowerCat === 'shoe' || lowerCat === 'sneakers' || lowerCat === 'loafers' || lowerCat === 'juttis' || lowerCat === 'footwear') resolvedCategory = 'Shoes';
+  else if (lowerCat === 'accessories' || lowerCat === 'accessory' || lowerCat === 'bag' || lowerCat === 'belt') resolvedCategory = 'Accessories';
+  else if (lowerCat === 't-shirt' || lowerCat === 'tee') resolvedCategory = 'T-Shirt';
+  else if (lowerCat === 'shirt' || lowerCat === 'top' || lowerCat === 'blouse' || lowerCat === 'sweater') resolvedCategory = 'Shirt';
 
   const res = await fetch(`${BACKEND_URL}/api/clothes`, {
-    method:  'POST',
+    method: 'POST',
     headers: {
       'Authorization': `Bearer ${authToken}`,
-      'Content-Type':  'application/json'
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      name:        name || 'Uploaded Garment',
-      category:    backendCatMap[category] || 'Other',
-      color:       color || '#9e7bb5',
-      brand:       brand || 'My Closet',
-      description: description || 'Uploaded from WardrobeWise virtual room.',
-      size:        size || 'M',
-      tags:        tags || [],
-      price:       110
+      name: name || 'My Clothing',
+      category: resolvedCategory,
+      subCategory: subCategory || undefined,
+      color: color || 'Custom',
+      secondaryColors: Array.isArray(secondaryColors) ? secondaryColors : [],
+      pattern: pattern || 'Plain',
+      material: material || '',
+      brand: brand || 'My Wardrobe',
+      season: Array.isArray(season) ? season : (season ? [season] : []),
+      occasion: Array.isArray(occasion) ? occasion : (occasion ? [occasion] : []),
+      style: Array.isArray(style) ? style : (style ? [style] : []),
+      description: description || '',
+      size: size || 'M',
+      tags: Array.isArray(tags) ? tags : [],
+      price: price || 110
     })
   });
   const data = await res.json();
@@ -315,9 +377,9 @@ export async function uploadClothingImage(token, clothingId, file) {
     const formData = new FormData();
     formData.append('image', file);
     const res = await fetch(`${BACKEND_URL}/api/clothes/${clothingId}/image`, {
-      method:  'POST',
+      method: 'POST',
       headers: { 'Authorization': `Bearer ${authToken}` },
-      body:    formData
+      body: formData
     });
     if (!res.ok) return null;
     const data = await res.json();
@@ -337,7 +399,7 @@ export async function analyzeStoredItem(token, clothingId) {
   if (!authToken || !clothingId) return null;
   try {
     const res = await fetch(`${BACKEND_URL}/api/clothes/${clothingId}/analyze`, {
-      method:  'POST',
+      method: 'POST',
       headers: { 'Authorization': `Bearer ${authToken}` }
     });
     if (!res.ok) return null;
@@ -355,7 +417,7 @@ export async function deleteClothingItem(token, clothingId) {
   if (!authToken || !clothingId) return false;
   try {
     const res = await fetch(`${BACKEND_URL}/api/clothes/${clothingId}`, {
-      method:  'DELETE',
+      method: 'DELETE',
       headers: { 'Authorization': `Bearer ${authToken}` }
     });
     return res.ok;

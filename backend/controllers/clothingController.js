@@ -4,6 +4,11 @@ import path from 'path';
 import ClothingItem, { CLOTHING_CATEGORIES } from '../models/ClothingItem.js';
 import User from '../models/User.js';
 import { recognizeClothingImage } from '../services/aiRecognitionService.js';
+import {
+  generateTextEmbedding,
+  generateVisualEmbedding,
+  generateClothingDescription
+} from '../services/embeddingService.js';
 
 /**
  * Escapes special characters for safe regular expression generation
@@ -54,6 +59,8 @@ export const addClothingItem = async (req, res, next) => {
       style,
       imageUrl,
       isFavorite,
+      description,
+      tags,
     } = req.body;
 
     // 1. Validate required fields
@@ -112,10 +119,8 @@ export const addClothingItem = async (req, res, next) => {
       }
     }
 
-    // 5. Create clothing item scoped to targetUserId
-    // imageUrl is optional in Phase 5 to support creating an item first, then uploading image
-    const clothingItem = await ClothingItem.create({
-      userId: targetUserId || new mongoose.Types.ObjectId(),
+    // 5. Build clean item payload with embeddings
+    const itemData = {
       name: name.trim(),
       category: matchedCategory,
       subCategory: subCategory ? subCategory.trim() : undefined,
@@ -137,6 +142,32 @@ export const addClothingItem = async (req, res, next) => {
         : [],
       imageUrl: imageUrl && typeof imageUrl === 'string' ? imageUrl.trim() : null,
       isFavorite: Boolean(isFavorite),
+      tags: Array.isArray(tags) ? tags.map((t) => String(t).trim()).filter(Boolean) : [],
+    };
+
+    const finalDescription = description && description.trim().length > 0
+      ? description.trim()
+      : generateClothingDescription(itemData);
+
+    const text_embedding = generateTextEmbedding(
+      `${itemData.name} ${itemData.category} ${itemData.subCategory || ''} ${itemData.color || ''} ${itemData.material || ''} ${itemData.pattern || ''} ${itemData.season.join(' ')} ${itemData.occasion.join(' ')} ${itemData.style.join(' ')} ${finalDescription}`
+    );
+
+    const image_embedding = generateVisualEmbedding({
+      category: itemData.category,
+      dominantColor: itemData.color || 'Neutral',
+      pattern: itemData.pattern || 'Plain',
+      aspectRatio: 1.2
+    });
+
+    const clothingItem = await ClothingItem.create({
+      userId: targetUserId || new mongoose.Types.ObjectId(),
+      ...itemData,
+      description: finalDescription,
+      text_embedding,
+      image_embedding,
+      source: 'wardrobe',
+      isEstimated: false
     });
 
     return res.status(201).json({
@@ -339,6 +370,8 @@ export const updateClothingItem = async (req, res, next) => {
       style,
       imageUrl,
       isFavorite,
+      description,
+      tags,
     } = req.body;
 
     // Validate and update fields
@@ -466,6 +499,12 @@ export const uploadClothingImage = async (req, res, next) => {
     // 4. Update document with new image URL and public ID
     clothingItem.imageUrl = newImageUrl;
     clothingItem.imagePublicId = newImageFilename;
+    clothingItem.image_embedding = generateVisualEmbedding({
+      category: clothingItem.category,
+      dominantColor: clothingItem.color || 'Neutral',
+      pattern: clothingItem.pattern || 'Plain',
+      aspectRatio: 1.2
+    });
 
     try {
       await clothingItem.save();
@@ -762,6 +801,46 @@ export const analyzeClothingItem = async (req, res, next) => {
         isGroq:     Boolean(aiResult.isGroq),
         stylingTip: aiResult.data?.stylingTip || null,
         analyzedBy: aiResult.data?.analyzedBy || 'Unknown',
+      },
+    });
+  } catch (error) {
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({
+        success: false,
+        message: error.message,
+      });
+    }
+    next(error);
+  }
+};
+
+/**
+ * @desc    Direct AI Vision Image Analysis on an uploaded file (no prior DB record required)
+ * @route   POST /api/clothes/analyze-direct
+ * @access  Public / Optional Auth
+ */
+export const analyzeDirectImage = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide an image file to analyze.',
+      });
+    }
+
+    const filename = req.file.filename;
+    const relativePath = `/uploads/clothing/${filename}`;
+
+    const aiResult = await recognizeClothingImage(relativePath);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Clothing image analyzed successfully',
+      data: {
+        ...aiResult.data,
+        imageUrl: relativePath,
+        isMock: Boolean(aiResult.isMock),
+        isGroq: Boolean(aiResult.isGroq),
       },
     });
   } catch (error) {

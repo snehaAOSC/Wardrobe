@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { aiConfig } from '../config/aiConfig.js';
-import { CLOTHING_CATEGORIES } from '../models/ClothingItem.js';
+import ClothingItem, { CLOTHING_CATEGORIES } from '../models/ClothingItem.js';
 import { groqAnalyzeClothingImage } from './groqService.js';
 
 /**
@@ -14,20 +14,26 @@ import { groqAnalyzeClothingImage } from './groqService.js';
 export const getMockAiPrediction = (filename = '') => {
   const lowerName = filename.toLowerCase();
 
-  let category    = 'Jacket';
-  let subCategory = 'Denim Jacket';
+  let category    = 'Dress';
+  let subCategory = 'Flared Frock Dress';
   let color       = 'Blue';
-  let material    = 'Denim';
+  let material    = 'Cotton';
   let pattern     = 'Solid';
 
-  if (lowerName.includes('shirt')) {
-    category = 'Shirt'; subCategory = 'Oxford Shirt'; color = 'White'; material = 'Cotton'; pattern = 'Striped';
-  } else if (lowerName.includes('jean') || lowerName.includes('trouser')) {
-    category = 'Jeans'; subCategory = 'Slim Fit Denim'; color = 'Black'; material = 'Denim'; pattern = 'Solid';
-  } else if (lowerName.includes('dress')) {
-    category = 'Dress'; subCategory = 'Casual Dress'; color = 'Red'; material = 'Cotton'; pattern = 'Floral';
-  } else if (lowerName.includes('shoe') || lowerName.includes('boot') || lowerName.includes('sneaker')) {
-    category = 'Shoes'; subCategory = 'Casual Shoes'; color = 'Brown'; material = 'Leather'; pattern = 'Plain';
+  if (lowerName.includes('shirt') || lowerName.includes('top') || lowerName.includes('blouse')) {
+    category = 'Shirt'; subCategory = 'Casual Shirt'; color = 'White'; material = 'Cotton'; pattern = 'Plain';
+  } else if (lowerName.includes('jean') || lowerName.includes('trouser') || lowerName.includes('pant')) {
+    category = 'Jeans'; subCategory = 'Denim Pants'; color = 'Black'; material = 'Denim'; pattern = 'Solid';
+  } else if (lowerName.includes('dress') || lowerName.includes('frock')) {
+    category = 'Dress'; subCategory = 'Flared Frock Dress'; color = 'Blue'; material = 'Cotton'; pattern = 'Solid';
+  } else if (lowerName.includes('saree') || lowerName.includes('sari')) {
+    category = 'Saree'; subCategory = 'Banarasi Saree'; color = 'Red'; material = 'Silk'; pattern = 'Zari';
+  } else if (lowerName.includes('shoe') || lowerName.includes('boot') || lowerName.includes('sneaker') || lowerName.includes('loafer')) {
+    category = 'Shoes'; subCategory = 'Casual Footwear'; color = 'White'; material = 'Leather'; pattern = 'Plain';
+  } else if (lowerName.includes('jacket') || lowerName.includes('coat') || lowerName.includes('blazer')) {
+    category = 'Jacket'; subCategory = 'Blazer'; color = 'Navy'; material = 'Wool'; pattern = 'Solid';
+  } else if (lowerName.includes('belt') || lowerName.includes('bag') || lowerName.includes('accessory')) {
+    category = 'Accessories'; subCategory = 'Leather Accessory'; color = 'Black'; material = 'Leather'; pattern = 'Plain';
   }
 
   return {
@@ -126,6 +132,40 @@ export const recognizeClothingImage = async (relativeImagePath) => {
     const error = new Error('Associated clothing image file was not found on local storage.');
     error.statusCode = 404;
     throw error;
+  }
+
+  // ── 0. Check if image is already saved in MongoDB Wardrobe ─────────────────
+  try {
+    const existing = await ClothingItem.findOne({
+      $or: [
+        { imageUrl: { $regex: filename, $options: 'i' } },
+        { imagePublicId: { $regex: filename, $options: 'i' } }
+      ]
+    });
+    if (existing) {
+      console.log(`[AI] Found authentic MongoDB item for image: ${existing.name} (${existing.category})`);
+      return {
+        success: true,
+        isMock: false,
+        isFromWardrobe: true,
+        data: {
+          category: existing.category,
+          subCategory: existing.subCategory || existing.category,
+          color: existing.color || 'Custom',
+          secondaryColors: existing.secondaryColors || [],
+          pattern: existing.pattern || 'Plain',
+          material: existing.material || 'Fabric',
+          season: existing.season || [],
+          occasion: existing.occasion || [],
+          style: existing.style || [],
+          confidence: 1.0,
+          stylingTip: existing.description || 'Retrieved from your authentic MongoDB wardrobe.',
+          analyzedBy: 'MongoDB Wardrobe Record'
+        }
+      };
+    }
+  } catch (dbErr) {
+    console.warn('[AI] Error querying MongoDB for existing image:', dbErr.message);
   }
 
   // ── 1. Try Groq Vision AI ──────────────────────────────────────────────────

@@ -5,6 +5,11 @@ import User from '../models/User.js';
 import ClothingItem from '../models/ClothingItem.js';
 import Outfit from '../models/Outfit.js';
 import OutfitHistory from '../models/OutfitHistory.js';
+import {
+  generateTextEmbedding,
+  generateVisualEmbedding,
+  generateClothingDescription
+} from '../services/embeddingService.js';
 
 const DEMO_USERS = [
   {
@@ -38,13 +43,13 @@ const SAMPLE_WARDROBE_ITEMS = [
     category: 'Shirt',
     subCategory: 'Button-Down',
     color: 'White',
-    secondaryColors: ['Blue'],
+    secondaryColors: ['Ivory'],
     material: '100% Egyptian Cotton',
     brand: 'Ralph Lauren',
     season: ['Spring', 'Summer', 'Autumn', 'Winter'],
     occasion: ['Work', 'Formal', 'Casual', 'College'],
     style: ['Chic', 'Formal', 'Minimalist'],
-    imageUrl: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=700&auto=format&fit=crop',
+    imageUrl: 'https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=700&auto=format&fit=crop',
     favorite: true,
   },
   {
@@ -58,7 +63,7 @@ const SAMPLE_WARDROBE_ITEMS = [
     season: ['Spring', 'Autumn', 'Winter'],
     occasion: ['Work', 'Dinner', 'Formal'],
     style: ['Chic', 'Formal'],
-    imageUrl: 'https://images.unsplash.com/photo-1589310243389-96a5483213a8?w=700&auto=format&fit=crop',
+    imageUrl: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?w=700&auto=format&fit=crop',
     favorite: true,
   },
   {
@@ -72,11 +77,25 @@ const SAMPLE_WARDROBE_ITEMS = [
     season: ['Spring', 'Summer', 'Autumn'],
     occasion: ['Casual', 'College', 'Sports'],
     style: ['Casual', 'Minimalist', 'Streetwear'],
-    imageUrl: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=700&auto=format&fit=crop',
+    imageUrl: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=700&auto=format&fit=crop',
     favorite: false,
   },
   {
-    name: 'Ribbed Knit Cashmere Sweater',
+    name: 'Classic Indigo Chambray Denim Shirt',
+    category: 'Shirt',
+    subCategory: 'Button-Down',
+    color: 'Blue',
+    secondaryColors: ['Indigo', 'Chambray'],
+    material: '100% Breathable Denim Chambray Cotton',
+    brand: "Levi's",
+    season: ['Spring', 'Summer', 'Autumn', 'Winter'],
+    occasion: ['Casual', 'College', 'Work'],
+    style: ['Casual', 'Streetwear'],
+    imageUrl: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=700&auto=format&fit=crop',
+    favorite: true,
+  },
+  {
+    name: 'Black Cashmere Turtleneck Sweater',
     category: 'Shirt',
     subCategory: 'Sweater',
     color: 'Black',
@@ -86,7 +105,7 @@ const SAMPLE_WARDROBE_ITEMS = [
     season: ['Autumn', 'Winter', 'Spring'],
     occasion: ['Work', 'Casual', 'Dinner'],
     style: ['Minimalist', 'Chic'],
-    imageUrl: 'https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=700&auto=format&fit=crop',
+    imageUrl: 'https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=700&auto=format&fit=crop',
     favorite: true,
   },
 
@@ -120,6 +139,20 @@ const SAMPLE_WARDROBE_ITEMS = [
     favorite: true,
   },
   {
+    name: 'Vintage Washed Black Slim Jeans',
+    category: 'Jeans',
+    subCategory: 'Slim Jeans',
+    color: 'Black',
+    secondaryColors: ['Charcoal'],
+    material: 'Stretch Denim Cotton',
+    brand: "Levi's 511",
+    season: ['Spring', 'Summer', 'Autumn', 'Winter'],
+    occasion: ['Casual', 'College', 'Party'],
+    style: ['Streetwear', 'Casual'],
+    imageUrl: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=700&auto=format&fit=crop',
+    favorite: true,
+  },
+  {
     name: 'Pleated A-Line Midi Skirt',
     category: 'Skirt',
     subCategory: 'Midi',
@@ -136,16 +169,46 @@ const SAMPLE_WARDROBE_ITEMS = [
 
   // DRESSES & INDIAN ETHNIC WEAR
   {
+    name: 'Ivory White Broderie Tiered Summer Frock Dress',
+    category: 'Dress',
+    subCategory: 'Frock',
+    color: 'White',
+    secondaryColors: ['Ivory', 'Cream'],
+    material: '100% Breathable Broderie Cotton',
+    pattern: 'Plain',
+    brand: 'Zara Woman',
+    season: ['Spring', 'Summer'],
+    occasion: ['Party', 'Casual', 'Summer party', 'Brunch', 'College'],
+    style: ['Chic', 'Romantic', 'Playful'],
+    imageUrl: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=700&auto=format&fit=crop',
+    favorite: true,
+  },
+  {
+    name: 'Scarlet Red Tiered Summer Frock Dress',
+    category: 'Dress',
+    subCategory: 'Frock',
+    color: 'Red',
+    secondaryColors: ['Crimson', 'Ruby'],
+    material: '100% Breathable Chiffon Cotton',
+    pattern: 'Floral',
+    brand: 'Reformation',
+    season: ['Summer', 'Spring'],
+    occasion: ['Party', 'Casual', 'Summer party', 'Brunch', 'Birthday', 'Date night'],
+    style: ['Chic', 'Playful'],
+    imageUrl: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=700&auto=format&fit=crop',
+    favorite: true,
+  },
+  {
     name: 'Royal Banarasi Crimson Silk Saree',
     category: 'Dress',
     subCategory: 'Saree',
-    color: 'Burgundy',
+    color: 'Red',
     secondaryColors: ['Gold', 'Crimson'],
     material: 'Pure Mulberry Silk with Gold Zari',
     brand: 'Varanasi Heritage',
     season: ['Spring', 'Autumn', 'Winter'],
-    occasion: ['Formal', 'Party', 'Dinner'],
-    style: ['Chic', 'Formal', 'Ethnic'],
+    occasion: ['Wedding', 'Festival', 'Formal', 'Traditional'],
+    style: ['Ethnic', 'Traditional', 'Regal'],
     imageUrl: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=700&auto=format&fit=crop',
     favorite: true,
   },
@@ -300,32 +363,53 @@ async function seedDatabase() {
 
     const primaryUser = userMap['user@wardrobewise.com'];
 
-    // 2. Clear old clothing items for primary user & seed fresh catalog
-    await ClothingItem.deleteMany({ userId: primaryUser._id });
-    const itemsToInsert = SAMPLE_WARDROBE_ITEMS.map((item) => ({
-      ...item,
-      userId: primaryUser._id,
-      aiAnalyzed: true,
-      aiAnalysis: {
-        category: item.category,
-        subCategory: item.subCategory,
-        color: item.color,
-        secondaryColors: item.secondaryColors,
-        material: item.material,
-        confidence: 0.94,
-        analyzedAt: new Date(),
-        isMock: false,
-      },
-    }));
-
-    const insertedClothes = await ClothingItem.insertMany(itemsToInsert);
-    console.log(`[Seed] Inserted ${insertedClothes.length} clothing items for ${primaryUser.email}`);
-
-    // Map inserted clothes by name for outfit assembly
+    // 2. Safe upsert of canonical wardrobe items (preserves user uploads & embeddings)
     const itemByName = {};
-    insertedClothes.forEach((item) => {
-      itemByName[item.name] = item._id;
-    });
+    for (const item of SAMPLE_WARDROBE_ITEMS) {
+      const desc = generateClothingDescription(item);
+      const textEmb = generateTextEmbedding({ ...item, description: desc });
+      const imgEmb = generateVisualEmbedding({
+        colorHex: item.color,
+        category: item.category,
+        pattern: item.pattern || 'Plain',
+        aspectRatio: item.subCategory === 'Frock' ? 1.6 : item.category === 'Dress' ? 1.8 : 1.2
+      });
+
+      let existing = await ClothingItem.findOne({ userId: primaryUser._id, name: item.name });
+      if (!existing) {
+        existing = new ClothingItem({
+          ...item,
+          userId: primaryUser._id,
+          description: desc,
+          text_embedding: textEmb,
+          image_embedding: imgEmb,
+          source: 'wardrobe',
+          isEstimated: false,
+          aiAnalyzed: true,
+          aiAnalysis: {
+            category: item.category,
+            subCategory: item.subCategory,
+            color: item.color,
+            secondaryColors: item.secondaryColors,
+            material: item.material,
+            confidence: 0.95,
+            analyzedAt: new Date(),
+            isMock: false,
+          }
+        });
+        await existing.save();
+      } else {
+        Object.assign(existing, item);
+        existing.description = desc;
+        existing.text_embedding = textEmb;
+        existing.image_embedding = imgEmb;
+        existing.source = 'wardrobe';
+        existing.isEstimated = false;
+        await existing.save();
+      }
+      itemByName[item.name] = existing._id;
+    }
+    console.log(`[Seed] Seeded & verified ${SAMPLE_WARDROBE_ITEMS.length} items with embeddings for ${primaryUser.email}`);
 
     // 3. Seed Ready-To-Wear Outfits
     await Outfit.deleteMany({ userId: primaryUser._id });

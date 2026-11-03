@@ -9,6 +9,7 @@ import {
   uploadClothingImage,
   deleteClothingImage,
   analyzeClothingItem,
+  analyzeDirectImage,
   getClothingAnalysis,
   updateClothingAnalysis,
   reanalyzeClothingItem,
@@ -17,6 +18,14 @@ import { protect, optionalProtect } from '../middleware/authMiddleware.js';
 import { uploadClothingImageMiddleware } from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
+
+/**
+ * @route   POST /api/clothes/analyze-direct
+ * @desc    Direct AI Vision Image Analysis on an uploaded file (no DB entry required)
+ * @access  Public / Optional Auth
+ */
+router.post('/analyze-direct', uploadClothingImageMiddleware, analyzeDirectImage);
+router.post('/analyze', uploadClothingImageMiddleware, analyzeDirectImage);
 
 /**
  * @route   POST /api/clothes
