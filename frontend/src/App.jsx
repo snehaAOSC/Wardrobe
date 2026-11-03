@@ -160,10 +160,10 @@ export default function App() {
         if (token) {
           setAuthToken(token);
           setCurrentUser(getSavedUser());
-          const clothes = await getWardrobe(token);
-          if (active && clothes) {
-            setBackendWardrobe(clothes);
-          }
+        }
+        const clothes = await getWardrobe(token);
+        if (active && Array.isArray(clothes)) {
+          setBackendWardrobe(clothes);
         }
       } catch (err) {
         console.warn('Initial wardrobe load error:', err.message);
@@ -176,13 +176,16 @@ export default function App() {
     return () => { active = false; };
   }, []);
 
-  // Fetch backend wardrobe whenever token changes
+  // Fetch backend wardrobe whenever token changes or on initial mount
   useEffect(() => {
-    if (!authToken) { setBackendWardrobe([]); return; }
     setIsLoadingWardrobe(true);
     getWardrobe(authToken)
-      .then((items) => setBackendWardrobe(items))
-      .catch(() => setBackendWardrobe([]))
+      .then((items) => {
+        if (Array.isArray(items)) {
+          setBackendWardrobe(items);
+        }
+      })
+      .catch(() => {})
       .finally(() => setIsLoadingWardrobe(false));
   }, [authToken]);
 
@@ -992,7 +995,10 @@ export default function App() {
           <button
             type="button"
             className={`wardrobe-mode-tab${panelTab === 'wardrobe' ? ' active' : ''}`}
-            onClick={() => setPanelTab('wardrobe')}
+            onClick={() => {
+              setPanelTab('wardrobe');
+              setActiveCategory('all');
+            }}
           >
             <Shirt size={14} />
             <span>My Wardrobe ({backendWardrobe.length})</span>
@@ -1118,9 +1124,30 @@ export default function App() {
                 </p>
                 <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.45)', lineHeight: 1.4 }}>
                   {panelTab === 'wardrobe'
-                    ? 'Click "Upload Cloth Image" above to store custom pieces in your MongoDB database!'
+                    ? (activeCategory !== 'all'
+                        ? `You have ${backendWardrobe.length} saved clothes in other categories.`
+                        : 'Click "Upload Cloth Image" above to store custom pieces in your MongoDB database!')
                     : 'Select "All" to browse the complete collection.'}
                 </p>
+                {activeCategory !== 'all' && (
+                  <button
+                    type="button"
+                    onClick={() => setActiveCategory('all')}
+                    style={{
+                      marginTop: '12px',
+                      padding: '8px 16px',
+                      borderRadius: '8px',
+                      background: 'linear-gradient(135deg, #7c3aed, #ec4899)',
+                      border: 'none',
+                      color: 'white',
+                      fontSize: '11.5px',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    View All {panelTab === 'wardrobe' ? `${backendWardrobe.length} Saved Clothes` : 'Catalog Items'}
+                  </button>
+                )}
               </div>
             ) : (
               <div className="garment-grid">

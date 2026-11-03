@@ -238,11 +238,12 @@ function backendItemToProduct(item) {
     silhouette: (item.subCategory || category || 'custom').toLowerCase(),
     position3D: [0, 2.0, -1.8],
     complementaryIds: [],
-    image: item.imageUrl
-      ? (item.imageUrl.startsWith('http')
-        ? item.imageUrl
-        : `${BACKEND_URL}${item.imageUrl}`)
-      : null
+    image: (() => {
+      const img = item.image || item.imageUrl;
+      if (!img) return null;
+      if (img.startsWith('http')) return img;
+      return `${BACKEND_URL}${img.startsWith('/') ? '' : '/'}${img}`;
+    })()
   };
 }
 
@@ -252,27 +253,23 @@ function backendItemToProduct(item) {
  * Returns an array of frontend-schema product objects.
  */
 export async function getWardrobe(token) {
-  let authToken = token || (await ensureAuth());
-  if (!authToken) return [];
+  let authToken = token || getAuthToken();
   try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
+
     let res = await fetch(`${BACKEND_URL}/api/clothes?limit=100`, {
-      headers: {
-        'Authorization': `Bearer ${authToken}`,
-        'Content-Type': 'application/json'
-      },
+      headers,
       signal: AbortSignal.timeout(6000)
     });
 
-    // If token expired, auto re-login once
+    // If token expired, clear and try fetching public/guest items
     if (res.status === 401) {
       clearAuthToken();
-      authToken = await ensureAuth();
-      if (!authToken) return [];
       res = await fetch(`${BACKEND_URL}/api/clothes?limit=100`, {
-        headers: {
-          'Authorization': `Bearer ${authToken}`,
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         signal: AbortSignal.timeout(6000)
       });
     }
