@@ -741,7 +741,7 @@ export async function generateStylistConversationalAdvice({ query, intent, wardr
 
       const completion = await Promise.race([
         groq.chat.completions.create({
-          model: 'llama-3.3-70b-versatile',
+          model: 'qwen/qwen3.8-27b',
           messages: [
             {
               role: 'system',
@@ -987,7 +987,7 @@ export async function executeRAGOutfitStylist({ userId, query = '', preferences 
  * Image-Based Clothing Search & Outfit Recommendation
  */
 export async function executeRAGImageSearch({ features = {}, userId = null }) {
-  const { category, dominantColor, pattern, aspectRatio } = features;
+  const { category, dominantColor, pattern, aspectRatio, wardrobeItemId, name, subCategory } = features;
 
   const targetCategory = category ? category.toLowerCase() : null;
   const targetColor = dominantColor ? dominantColor.toLowerCase() : null;
@@ -995,13 +995,34 @@ export async function executeRAGImageSearch({ features = {}, userId = null }) {
   // Search using the multi-attribute pipeline
   const result = await executeRAGOutfitStylist({
     userId,
-    query: `${dominantColor || ''} ${category || ''}`.trim(),
+    query: name ? name : `${dominantColor || ''} ${subCategory || category || ''}`.trim(),
     preferences: {
       category: targetCategory,
       color: targetColor,
       pattern
     }
   });
+
+  // If a specific wardrobe item was matched from MongoDB image hash, prioritize it at the top of exact matches
+  if (wardrobeItemId) {
+    if (!result.exactMatches) result.exactMatches = [];
+    const existingIndex = result.exactMatches.findIndex((m) => String(m._id) === String(wardrobeItemId));
+    if (existingIndex > 0) {
+      const [matched] = result.exactMatches.splice(existingIndex, 1);
+      result.exactMatches.unshift(matched);
+    } else if (existingIndex === -1) {
+      const altIndex = (result.similarAlternatives || []).findIndex((m) => String(m._id) === String(wardrobeItemId));
+      if (altIndex >= 0) {
+        const [matched] = result.similarAlternatives.splice(altIndex, 1);
+        matched.matchType = 'Exact Wardrobe Match';
+        matched.matchReason = 'Identical piece found in your personal MongoDB wardrobe!';
+        matched.matchScore = 100;
+        result.exactMatches.unshift(matched);
+      }
+    }
+    result.notFound = false;
+    result.message = `Found ${result.exactMatches.length} exact match in your personal wardrobe.`;
+  }
 
   return {
     ...result,
@@ -1010,7 +1031,8 @@ export async function executeRAGImageSearch({ features = {}, userId = null }) {
       category: category || 'Detected Garment',
       color: dominantColor || 'Detected Hue',
       pattern: pattern || 'Solid',
-      aspectRatio: aspectRatio || '1.0'
+      aspectRatio: aspectRatio || '1.0',
+      matchedItemName: name || null
     }
   };
 }

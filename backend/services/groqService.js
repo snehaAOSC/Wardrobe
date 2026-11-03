@@ -17,7 +17,7 @@ function getGroqClient() {
 
 // ─── Models ───────────────────────────────────────────────────────────────────
 const VISION_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'; // Image analysis
-const TEXT_MODEL   = 'llama-3.3-70b-versatile';                   // Outfit recommendations
+const TEXT_MODEL   = 'qwen/qwen3.8-27b';                   // Outfit recommendations
 
 // ─── 1. CLOTHING IMAGE ANALYSIS ───────────────────────────────────────────────
 

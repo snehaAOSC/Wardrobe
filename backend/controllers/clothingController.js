@@ -835,12 +835,15 @@ export const analyzeDirectImage = async (req, res, next) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Clothing image analyzed successfully',
+      message: aiResult.isWardrobeMatch
+        ? `Found matching item in your wardrobe: ${aiResult.data.name}`
+        : 'Clothing image analyzed successfully',
       data: {
         ...aiResult.data,
         imageUrl: relativePath,
         isMock: Boolean(aiResult.isMock),
         isGroq: Boolean(aiResult.isGroq),
+        isWardrobeMatch: Boolean(aiResult.isWardrobeMatch),
       },
     });
   } catch (error) {

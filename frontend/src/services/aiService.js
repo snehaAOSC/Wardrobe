@@ -639,10 +639,14 @@ export async function analyzeClothingImage(file) {
       if (json?.data) {
         return {
           status: 'success',
-          analyzedBy: json.data.isGroq ? 'Groq Vision LLaMA-4' : 'Express AI Recognition',
+          analyzedBy: json.data.analyzedBy || (json.data.isGroq ? 'Groq Vision' : 'Personal Wardrobe Match'),
+          name: json.data.name || null,
           category: json.data.category,
+          subCategory: json.data.subCategory,
           category_group: CATEGORY_MAP[json.data.category?.toLowerCase()]?.group || 'top',
-          classification: json.data.category,
+          classification: json.data.subCategory || json.data.category,
+          color: json.data.color,
+          primaryColor: json.data.primaryColor || '#dc2626',
           colour: {
             dominant: json.data.color,
             dominant_hex: json.data.primaryColor || '#dc2626',
@@ -651,8 +655,10 @@ export async function analyzeClothingImage(file) {
           },
           pattern: json.data.pattern || 'Plain',
           material: json.data.material || 'Cotton',
-          confidence: json.data.confidence || 0.88,
-          stylingTip: json.data.stylingTip || null
+          confidence: json.data.confidence || 0.95,
+          stylingTip: json.data.stylingTip || null,
+          isWardrobeMatch: Boolean(json.data.isWardrobeMatch),
+          wardrobeItemId: json.data.wardrobeItemId || null
         };
       }
     }

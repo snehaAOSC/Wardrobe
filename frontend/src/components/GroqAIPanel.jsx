@@ -1558,18 +1558,113 @@ export default function GroqAIPanel({
               )}
 
               {analysis && (
-                <div>
-                  <Section title="Detected Category" icon={Tag}>
-                    <span style={{ fontSize: '18px', fontWeight: 800, color: 'white' }}>
-                      {analysis.category || 'Clothing Item'}
-                    </span>
-                  </Section>
+                <div style={{ marginTop: '14px', background: 'rgba(255,255,255,0.04)', borderRadius: '14px', padding: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  {analysis.isWardrobeMatch && (
+                    <div
+                      style={{
+                        background: 'rgba(16,185,129,0.15)',
+                        border: '1px solid rgba(16,185,129,0.35)',
+                        borderRadius: '10px',
+                        padding: '10px 12px',
+                        marginBottom: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}
+                    >
+                      <CheckCircle size={16} style={{ color: '#34d399', flexShrink: 0 }} />
+                      <div>
+                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#6ee7b7', display: 'block' }}>
+                          Matched Personal Wardrobe
+                        </span>
+                        <span style={{ fontSize: '11px', color: '#a7f3d0' }}>
+                          Authentic saved piece: {analysis.name}
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
-                  <Section title="Color Detection" icon={Palette}>
-                    <p style={{ margin: 0, fontSize: '13px', color: '#c4b5fd' }}>
-                      Primary: {analysis.color?.primary || analysis.color || 'Detected Color'}
-                    </p>
-                  </Section>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                    <div>
+                      <div style={{ fontSize: '16px', fontWeight: 800, color: 'white' }}>
+                        {analysis.name || `${analysis.color || analysis.colour?.dominant || ''} ${analysis.subCategory || analysis.category || 'Piece'}`}
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#c4b5fd', marginTop: '2px' }}>
+                        Category: <strong style={{ color: 'white' }}>{analysis.category}</strong> {analysis.subCategory && analysis.subCategory !== analysis.category ? `· ${analysis.subCategory}` : ''}
+                      </div>
+                    </div>
+                    {analysis.confidence && (
+                      <span style={{ fontSize: '11px', color: '#34d399', background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>
+                        {Math.round(analysis.confidence * 100)}% Match
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', marginBottom: '12px' }}>
+                    <div style={{ background: 'rgba(0,0,0,0.25)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>Color</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                        <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: analysis.primaryColor || analysis.colour?.dominant_hex || '#ffffff', border: '1px solid rgba(255,255,255,0.4)', display: 'inline-block' }} />
+                        <span style={{ fontSize: '12px', color: 'white', fontWeight: 600 }}>{analysis.color || analysis.colour?.dominant || 'White'}</span>
+                      </div>
+                    </div>
+
+                    <div style={{ background: 'rgba(0,0,0,0.25)', padding: '8px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                      <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>Pattern & Fabric</span>
+                      <span style={{ fontSize: '12px', color: 'white', fontWeight: 600, display: 'block', marginTop: '4px' }}>
+                        {analysis.pattern || 'Plain'} · {analysis.material || 'Cotton'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {analysis.stylingTip && (
+                    <div style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.25)', borderRadius: '8px', padding: '8px 10px', marginBottom: '12px', fontSize: '11px', color: '#ddd6fe' }}>
+                      💡 <em>{analysis.stylingTip}</em>
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={handleWearScannedItem}
+                      style={{
+                        flex: 1,
+                        padding: '10px',
+                        borderRadius: '10px',
+                        background: 'linear-gradient(135deg, #7c3aed, #ec4899)',
+                        border: 'none',
+                        color: 'white',
+                        fontWeight: 700,
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <Sparkles size={14} /> Try On Model
+                    </button>
+                    <button
+                      onClick={handleSearchSimilarInWardrobe}
+                      style={{
+                        flex: 1,
+                        padding: '10px',
+                        borderRadius: '10px',
+                        background: 'rgba(255,255,255,0.08)',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                        color: 'white',
+                        fontWeight: 600,
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <Compass size={14} /> View in Wardrobe
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

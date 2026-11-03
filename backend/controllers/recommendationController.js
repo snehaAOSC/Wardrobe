@@ -67,7 +67,10 @@ export const searchClothingByImage = async (req, res, next) => {
             dominantColor: features.dominantColor || aiResult.data.color,
             pattern: features.pattern || aiResult.data.pattern,
             material: features.material || aiResult.data.material,
-            aspectRatio: features.aspectRatio || 1.2
+            aspectRatio: features.aspectRatio || 1.2,
+            subCategory: aiResult.data.subCategory,
+            name: aiResult.data.name,
+            wardrobeItemId: aiResult.data.wardrobeItemId
           };
         }
       } catch (err) {
